@@ -12,7 +12,13 @@ int main()
 	sf::RenderWindow window(sf::VideoMode(1200, 1200), "Makaveli");
 
 	// Player init
-	std::unique_ptr<Player> player = std::make_unique<Player>(sf::Vector2f(600, 1150), sf::Vector2f(50, 50), sf::Vector2f(0.0f, 0.0f), window);
+	std::unique_ptr<Player> player = std::make_unique<Player>(
+		sf::Vector2f(600, 1150), 
+		sf::Vector2f(50, 50), 
+		sf::Vector2f(),
+		sf::Vector2f(),
+		window
+	);
 
 	// Game's clock
 	sf::Clock clock;
@@ -45,7 +51,7 @@ int main()
 			player->update(deltaTime);
 
 			// Spawn projectiles
-			// 
+			
 			// Update projectiles and check collisions
 
 			// Collision detected with the player
