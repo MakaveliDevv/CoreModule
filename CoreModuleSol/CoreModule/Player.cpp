@@ -1,7 +1,12 @@
 #include "Player.h"
 
-Player::Player(const sf::Vector2f& position, const sf::Vector2f& size, const sf::Vector2f& velocity)
-    : velocity(velocity) {
+Player::Player(
+    const sf::Vector2f& position,
+    const sf::Vector2f& size,
+    const sf::Vector2f& velocity,
+    sf::RenderWindow& window
+)
+    : velocity(velocity), window(window) {
     shape.setSize(size);
     shape.setPosition(position);
     shape.setFillColor(sf::Color::Green);

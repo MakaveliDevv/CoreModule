@@ -12,7 +12,7 @@ int main()
 	sf::RenderWindow window(sf::VideoMode(1200, 1200), "Makaveli");
 
 	// Player init
-	std::unique_ptr<Player> player = std::make_unique<Player>(sf::Vector2f(600, 1150), sf::Vector2f(50, 50), sf::Vector2f(0.0f, 0.0f));
+	std::unique_ptr<Player> player = std::make_unique<Player>(sf::Vector2f(600, 1150), sf::Vector2f(50, 50), sf::Vector2f(0.0f, 0.0f), window);
 
 	// Game's clock
 	sf::Clock clock;
