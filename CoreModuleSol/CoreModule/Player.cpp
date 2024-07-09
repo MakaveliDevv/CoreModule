@@ -5,15 +5,19 @@ Player::Player(
     const sf::Vector2f& size,
     const sf::Vector2f& velocity,
     const sf::Vector2f& direction,
-    sf::RenderWindow& window
+    sf::RenderWindow& window,
+    float acceleration,
+    float friction,
+    float stoppingFactor
 )
-    : velocity(velocity), direction(direction), window(window) {
-    shape.setSize(size);
+    : Size(size), velocity(velocity), direction(direction), window(window), acceleration(acceleration), friction(friction), stoppingFactor(stoppingFactor) {
+    shape.setSize(Size);
     shape.setPosition(position);
     shape.setFillColor(sf::Color::Green);
 }
 
 void Player::update(float deltaTime) {
+    // Reset direction
     direction = sf::Vector2f(0.0f, 0.0f);
 
     // Input for movement
@@ -25,17 +29,16 @@ void Player::update(float deltaTime) {
     }
 
     // Normalize direction
-    if(direction.x != 0.0f) 
-    {
+    if (direction.x != 0.0f) {
         float Xlength = customSqr(direction.x * direction.x);
         direction /= Xlength;
     }
- 
+
     // Update velocity with acceleration
     velocity += direction * acceleration * deltaTime;
 
     // Apply friction
-    if(direction.x == 0.0f) {
+    if (direction.x == 0.0f) {
         float actualFriction = std::min(friction, 1.0f);
         velocity -= velocity * actualFriction * deltaTime;
     }
@@ -55,16 +58,15 @@ void Player::update(float deltaTime) {
     }
     if (position.x + shape.getSize().x > window.getSize().x) {
         position.x = window.getSize().x - shape.getSize().x;
-        velocity.x = std::min(velocity.x, 0.0f); // Prevent positive velocity;
+        velocity.x = std::min(velocity.x, 0.0f); // Prevent positive velocity
     }
-      
+
     shape.setPosition(position);
 }
 
 // Method to normalize direction
 float Player::customSqr(float x) {
-    if (x == 0.0f || x == 1.0f)
-    {
+    if (x == 0.0f || x == 1.0f) {
         return x;
     }
 

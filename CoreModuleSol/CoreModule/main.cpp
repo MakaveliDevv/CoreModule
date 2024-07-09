@@ -1,77 +1,101 @@
 #include <SFML/Graphics.hpp>
 #include "Player.h"
+#include "Projectile.h"
 #include <vector>
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
 #include <memory>
 
-int main() 
-{
-	// Window init
-	sf::RenderWindow window(sf::VideoMode(1200, 1200), "Makaveli");
+int main() {
+    // Window init
+    sf::RenderWindow window(sf::VideoMode(600, 800), "Makaveli");
 
-	// Player init
-	std::unique_ptr<Player> player = std::make_unique<Player>(
-		sf::Vector2f(600, 1150), 
-		sf::Vector2f(50, 50), 
-		sf::Vector2f(),
-		sf::Vector2f(),
-		window
-	);
+    // Player init
+    std::unique_ptr<Player> player = std::make_unique<Player>(
+        sf::Vector2f(300, 750),   // Position
+        sf::Vector2f(50.0f, 50.0f),  // Size
+        sf::Vector2f(0.0f, 0.0f),    // Velocity
+        sf::Vector2f(0.0f, 0.0f),    // Direction
+        window,                     // RenderWindow
+        500.0f,                     // Acceleration
+        0.25f,                      // Friction
+        0.5f                        // Stopping Factor
+    );
 
-	// Game's clock
-	sf::Clock clock;
-	float spawnTimer = 0;
-	float spawnInterval = 1.0f;
+    std::vector<std::unique_ptr<Projectile>> projectiles;
 
-	srand(static_cast<unsigned>(time(0)));
+    // Game's clock
+    sf::Clock clock;
 
-	// Gameplay stuff such as scores and stuff
-	int score = 0;
-	bool gameOver = false;
-	bool gameWin = false;
+    float spawnTimer = 0;
+    float spawnInterval = 1.0f; // spawn a projectile every second
+    float projectileAcceleration = 200.0f;
 
-	while(window.isOpen()) 
-	{
-		sf::Event event;
-		while(window.pollEvent(event))
-		{
-			if(event.type == sf::Event::Closed) 
-			{
-				window.close();
-			}
-		}
+    srand(static_cast<unsigned>(time(0)));
 
-		// Assign the time to a variable
-		float deltaTime = clock.restart().asSeconds();
+    int score = 0;
+    bool gameOver = false;
+    bool gameWin = false;
 
-		if(!gameOver && !gameWin) 
-		{
-			player->update(deltaTime);
+    while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed) {
+                window.close();
+            }
+        }
 
-			// Spawn projectiles
-			
-			// Update projectiles and check collisions
+        // Assign the time to a variable
+        float deltaTime = clock.restart().asSeconds();
 
-			// Collision detected with the player
+        if (!gameOver && !gameWin) {
+            // Update player
+            player->update(deltaTime);
 
-			// Check if projectile is off screen
+            spawnTimer += deltaTime;
+            if (spawnTimer >= spawnInterval) {
+                // Generate a random value on the x axis based on the window size
+                float x = static_cast<float>(rand() % window.getSize().x);
 
-			// Remove projectiles that are off screen
-		}
+                // Initial velocity is zero, direction is downwards, acceleration is set
+                projectiles.emplace_back(std::make_unique<Projectile>(
+                    sf::Vector2f(x, 0),
+                    sf::Vector2f(30.0f, 30.0f),
+                    sf::Vector2f(0.0f, 0.0f), // Initial velocity is zero
+                    sf::Vector2f(0.0f, 1.0f), // Move downwards
+                    window,
+                    projectileAcceleration
+                ));
 
-		// Clear the window before drawing
-		window.clear();
+                spawnTimer = 0;
+            }
 
-		// Draw player
-		player->draw(window);
+            for (auto it = projectiles.begin(); it != projectiles.end();) {
+                (*it)->update(deltaTime);
+                if ((*it)->getBounds().top > window.getSize().y) {
+                    it = projectiles.erase(it); // Remove projectile if it goes out of bounds
+                }
+                else {
+                    ++it;
+                }
+            }
+        }
 
-		// Draw projectiles
+        // Clear the window before drawing
+        window.clear();
 
-		// Display what has been drawn
-		window.display();
+        // Draw player
+        player->draw(window);
 
+        // Draw projectiles
+        for (const auto& projectile : projectiles) {
+            projectile->draw(window);
+        }
 
-	}
+        // Display what has been drawn
+        window.display();
+    }
+
+    return 0;
 }
