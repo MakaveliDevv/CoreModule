@@ -13,14 +13,15 @@ int main() {
 
     // Player init
     std::unique_ptr<Player> player = std::make_unique<Player>(
-        sf::Vector2f(300, 750),   
-        sf::Vector2f(50.0f, 50.0f),  
-        sf::Vector2f(0.0f, 0.0f),    
-        sf::Vector2f(0.0f, 0.0f),    
-        window,                     
-        500.0f,                     
-        0.25f,                      
-        0.5f                        
+        sf::Vector2f(300, 750),
+        sf::Vector2f(50.0f, 50.0f),
+        sf::Vector2f(0.0f, 0.0f),
+        sf::Vector2f(0.0f, 0.0f),
+        window,
+        500.0f,
+        0.25f,
+        0.5f,
+        1.0f
     );
 
     // Game's clock
@@ -57,20 +58,21 @@ int main() {
                 float x = static_cast<float>(rand() % window.getSize().x);
 
                 // Initial direction is downwards, acceleration is set
-                Projectile::projectiles.emplace_back(std::make_unique<Projectile>(
+                Projectile::projectile.emplace_back(std::make_unique<Projectile>(
                     sf::Vector2f(x, 0),
                     sf::Vector2f(30.0f, 30.0f),
                     sf::Vector2f(1.0f, 1.0f),
-                    sf::Vector2f(0.0f, 0.0f),
+                    sf::Vector2f(0.0f, 200.0f),
                     window,
-                    projectileAcceleration
+                    projectileAcceleration,
+                    sf::Color::Red
                 ));
 
                 spawnTimer = 0;
             }
 
             // Update projectiles
-            for (const auto& projectile : Projectile::projectiles) {
+            for (const auto& projectile : Projectile::projectile) {
                 projectile->update(deltaTime);
             }
 
@@ -85,7 +87,7 @@ int main() {
         player->draw(window);
 
         // Draw projectiles
-        for (const auto& projectile : Projectile::projectiles) {
+        for (const auto& projectile : Projectile::projectile) {
             projectile->draw(window);
         }
 

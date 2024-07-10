@@ -13,7 +13,8 @@ public:
         const sf::Vector2f& direction,
         const sf::Vector2f& velocity,
         sf::RenderWindow& window,
-        float acceleration
+        float acceleration,
+        const sf::Color& color
     );
 
     void update(float deltaTime);
@@ -23,8 +24,9 @@ public:
 
     bool isOutOfBounds() const;
     static void removeOutOfBounds();
+    void checkCollisions();
 
-    static std::vector<std::unique_ptr<Projectile>> projectiles;
+    static std::vector<std::unique_ptr<Projectile>> projectile;
 
 protected:
     sf::RectangleShape shape;

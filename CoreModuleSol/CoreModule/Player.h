@@ -1,4 +1,10 @@
+#ifndef PLAYER_H
+#define PLAYER_H
+
 #include <SFML/Graphics.hpp>
+#include "Projectile.h"
+#include <vector>
+#include <memory>
 
 class Player {
 public:
@@ -10,23 +16,27 @@ public:
         sf::RenderWindow& window,
         float acceleration,
         float friction,
-        float stoppingFactor
+        float stoppingFactor,
+        float shootingCooldown
     );
 
     void movement(float deltaTime);
     void draw(sf::RenderWindow& window);
     float normalizeDirection(float x);
-    float shoot(float shootingPower);
+    void shoot();
     sf::FloatRect getBounds() const;
 
 private:
     sf::RectangleShape shape;
     sf::Vector2f Size;
-    sf::Vector2f velocity;
+    sf::Vector2f vel;
     sf::Vector2f direction;
     sf::RenderWindow& window;
     float acceleration;
     float friction;
     float stoppingFactor;
-    float shootingPower;
+    float shootingCooldown;
+    float shootingTimer;
 };
+
+#endif

@@ -1,4 +1,5 @@
 #include "Player.h"
+#include "Projectile.h"
 
 Player::Player(
     const sf::Vector2f& position,
@@ -8,15 +9,21 @@ Player::Player(
     sf::RenderWindow& window,
     float acceleration,
     float friction,
-    float stoppingFactor
+    float stoppingFactor,
+    float shootingCooldown
 )
-    : Size(size), velocity(velocity), direction(direction), window(window), acceleration(acceleration), friction(friction), stoppingFactor(stoppingFactor) {
+    : Size(size), vel(velocity), direction(direction), window(window), acceleration(acceleration), friction(friction), stoppingFactor(stoppingFactor), shootingCooldown(shootingCooldown), shootingTimer(0.0f) {
     shape.setSize(Size);
     shape.setPosition(position);
     shape.setFillColor(sf::Color::Green);
+
+    vel = direction * acceleration;
 }
 
 void Player::movement(float deltaTime) {
+    // Update shooting timer
+    shootingTimer += deltaTime;
+
     // Reset direction
     direction = sf::Vector2f(0.0f, 0.0f);
 
@@ -35,33 +42,39 @@ void Player::movement(float deltaTime) {
     }
 
     // Update velocity with acceleration
-    velocity += direction * acceleration * deltaTime;
+    vel += direction * acceleration * deltaTime;
 
     // Apply friction
     if (direction.x == 0.0f) {
         float actualFriction = std::min(friction, 1.0f);
-        velocity -= velocity * actualFriction * deltaTime;
+        vel -= vel * actualFriction * deltaTime;
     }
 
     // Apply stopping factor
     float actualStoppingFactor = std::min(stoppingFactor, 1.0f);
-    velocity -= velocity * actualStoppingFactor * deltaTime;
+    vel -= vel * actualStoppingFactor * deltaTime;
 
     // Update position
-    shape.move(velocity * deltaTime);
+    shape.move(vel * deltaTime);
 
     // Ensure player stays within window bounds
     sf::Vector2f position = shape.getPosition();
     if (position.x < 0) {
         position.x = 0;
-        velocity.x = std::max(velocity.x, 0.0f); // Prevent negative velocity
+        vel.x = std::max(vel.x, 0.0f); // Prevent negative velocity
     }
     if (position.x + shape.getSize().x > window.getSize().x) {
         position.x = window.getSize().x - shape.getSize().x;
-        velocity.x = std::min(velocity.x, 0.0f); // Prevent positive velocity
+        vel.x = std::min(vel.x, 0.0f); // Prevent positive velocity
     }
 
     shape.setPosition(position);
+
+    // Handle shooting
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && shootingTimer >= shootingCooldown) {
+        shoot();
+        shootingTimer = 0.0f; 
+    }
 }
 
 // Method to normalize direction
@@ -79,11 +92,43 @@ float Player::normalizeDirection(float x) {
 
     return normalize;
 }
-/*
-float Player::shoot(float shootingPower) {
-    // 
+
+// Method to shoot projectiles
+void Player::shoot() {
+    sf::Vector2f projectilePosition = shape.getPosition() + sf::Vector2f(Size.x / 2.0f, 0.0f);
+    Projectile::projectile.emplace_back(std::make_unique<Projectile>(
+        projectilePosition,
+        sf::Vector2f(10.0f, 10.0f),
+        sf::Vector2f(0.0f, -1.0f),
+        sf::Vector2f(0.0f, -300.0f),
+        window,
+        0.0f,
+        sf::Color::Blue
+    ));
 }
-*/
+
+
+void Projectile::checkCollisions() {
+    for (size_t i = 0; i < projectile.size(); ++i) {
+        for (size_t j = i + 1; j < projectile.size(); ++j) {
+            if (projectile[i]->getBounds().intersects(projectile[j]->getBounds())) {
+                projectile[i]->outOfBounds = true;
+                projectile[j]->outOfBounds = true;
+            }
+        }
+    }
+
+    // Remove projectiles that are marked as out of bounds
+    auto it = projectile.begin();
+    while (it != projectile.end()) {
+        if ((*it)->isOutOfBounds()) {
+            it = projectile.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+}
 
 // To draw the player
 void Player::draw(sf::RenderWindow& window) {

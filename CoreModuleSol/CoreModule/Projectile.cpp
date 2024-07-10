@@ -1,7 +1,7 @@
 #include "Projectile.h"
 #include <algorithm>
 
-std::vector<std::unique_ptr<Projectile>> Projectile::projectiles;
+std::vector<std::unique_ptr<Projectile>> Projectile::projectile;
 
 Projectile::Projectile(
     const sf::Vector2f& position,
@@ -9,17 +9,18 @@ Projectile::Projectile(
     const sf::Vector2f& direction,
     const sf::Vector2f& velocity,
     sf::RenderWindow& window,
-    float acceleration
+    float acceleration,
+    const sf::Color& color
 )
     : Size(size), direction(direction), window(window), acceleration(acceleration), vel(velocity), outOfBounds(false) {
     shape.setSize(Size);
     shape.setPosition(position);
-    shape.setFillColor(sf::Color::Red);
+    shape.setFillColor(color);
 
     // Initialize velocity based on direction and acceleration
-    vel = direction * acceleration;
-
-    projectiles.push_back(std::make_unique<Projectile>(*this));
+    if (acceleration != 0.0f) {
+        vel = direction * acceleration;
+    }
 }
 
 void Projectile::update(float deltaTime) {
@@ -51,13 +52,13 @@ bool Projectile::isOutOfBounds() const {
 }
 
 void Projectile::removeOutOfBounds() {
-    projectiles.erase(std::remove_if(
-        projectiles.begin(),
-        projectiles.end(),
+    projectile.erase(std::remove_if(
+        projectile.begin(),
+        projectile.end(),
         [](const std::unique_ptr<Projectile>& p) {
             return p->isOutOfBounds();
         }),
-        projectiles.end());
+        projectile.end());
 }
 
 float Projectile::normalizeDirection(float x) {
@@ -73,4 +74,8 @@ float Projectile::normalizeDirection(float x) {
     }
 
     return c;
+}
+
+void Projectile::checkCollisions() {
+
 }
