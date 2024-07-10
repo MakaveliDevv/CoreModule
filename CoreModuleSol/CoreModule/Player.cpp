@@ -16,7 +16,7 @@ Player::Player(
     shape.setFillColor(sf::Color::Green);
 }
 
-void Player::update(float deltaTime) {
+void Player::movement(float deltaTime) {
     // Reset direction
     direction = sf::Vector2f(0.0f, 0.0f);
 
@@ -30,7 +30,7 @@ void Player::update(float deltaTime) {
 
     // Normalize direction
     if (direction.x != 0.0f) {
-        float Xlength = customSqr(direction.x * direction.x);
+        float Xlength = normalizeDirection(direction.x * direction.x);
         direction /= Xlength;
     }
 
@@ -65,20 +65,25 @@ void Player::update(float deltaTime) {
 }
 
 // Method to normalize direction
-float Player::customSqr(float x) {
+float Player::normalizeDirection(float x) {
     if (x == 0.0f || x == 1.0f) {
         return x;
     }
 
-    float guess = x / 2.0f;
+    float normalize = x / 2.0f;
     float error = 0.000f;
 
-    while (std::abs(guess * guess - x) > error) {
-        guess = (guess + x / guess) / 2.0f;
+    while (std::abs(normalize * normalize - x) > error) {
+        normalize = (normalize + x / normalize) / 2.0f;
     }
 
-    return guess;
+    return normalize;
 }
+/*
+float Player::shoot(float shootingPower) {
+    // 
+}
+*/
 
 // To draw the player
 void Player::draw(sf::RenderWindow& window) {

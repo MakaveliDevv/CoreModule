@@ -13,9 +13,10 @@ public:
         float stoppingFactor
     );
 
-    void update(float deltaTime);
+    void movement(float deltaTime);
     void draw(sf::RenderWindow& window);
-    float customSqr(float x);
+    float normalizeDirection(float x);
+    float shoot(float shootingPower);
     sf::FloatRect getBounds() const;
 
 private:
@@ -27,4 +28,5 @@ private:
     float acceleration;
     float friction;
     float stoppingFactor;
+    float shootingPower;
 };

@@ -1,26 +1,39 @@
+#ifndef PROJECTILE_H
+#define PROJECTILE_H
+
 #include <SFML/Graphics.hpp>
+#include <vector>
+#include <memory>
 
 class Projectile {
 public:
-	Projectile(
+    Projectile(
         const sf::Vector2f& position,
         const sf::Vector2f& size,
-        const sf::Vector2f& velocity,
         const sf::Vector2f& direction,
+        const sf::Vector2f& velocity,
         sf::RenderWindow& window,
         float acceleration
     );
 
     void update(float deltaTime);
     void draw(sf::RenderWindow& window);
-    float customSqr(float x);
+    float normalizeDirection(float x);
     sf::FloatRect getBounds() const;
 
-private:
+    bool isOutOfBounds() const;
+    static void removeOutOfBounds();
+
+    static std::vector<std::unique_ptr<Projectile>> projectiles;
+
+protected:
     sf::RectangleShape shape;
     sf::Vector2f Size;
-    sf::Vector2f velocity;
+    sf::Vector2f vel;
     sf::Vector2f direction;
     sf::RenderWindow& window;
     float acceleration;
+    bool outOfBounds;
 };
+
+#endif

@@ -13,17 +13,15 @@ int main() {
 
     // Player init
     std::unique_ptr<Player> player = std::make_unique<Player>(
-        sf::Vector2f(300, 750),   // Position
-        sf::Vector2f(50.0f, 50.0f),  // Size
-        sf::Vector2f(0.0f, 0.0f),    // Velocity
-        sf::Vector2f(0.0f, 0.0f),    // Direction
-        window,                     // RenderWindow
-        500.0f,                     // Acceleration
-        0.25f,                      // Friction
-        0.5f                        // Stopping Factor
+        sf::Vector2f(300, 750),   
+        sf::Vector2f(50.0f, 50.0f),  
+        sf::Vector2f(0.0f, 0.0f),    
+        sf::Vector2f(0.0f, 0.0f),    
+        window,                     
+        500.0f,                     
+        0.25f,                      
+        0.5f                        
     );
-
-    std::vector<std::unique_ptr<Projectile>> projectiles;
 
     // Game's clock
     sf::Clock clock;
@@ -51,19 +49,19 @@ int main() {
 
         if (!gameOver && !gameWin) {
             // Update player
-            player->update(deltaTime);
+            player->movement(deltaTime);
 
             spawnTimer += deltaTime;
             if (spawnTimer >= spawnInterval) {
                 // Generate a random value on the x axis based on the window size
                 float x = static_cast<float>(rand() % window.getSize().x);
 
-                // Initial velocity is zero, direction is downwards, acceleration is set
-                projectiles.emplace_back(std::make_unique<Projectile>(
+                // Initial direction is downwards, acceleration is set
+                Projectile::projectiles.emplace_back(std::make_unique<Projectile>(
                     sf::Vector2f(x, 0),
                     sf::Vector2f(30.0f, 30.0f),
-                    sf::Vector2f(0.0f, 0.0f), // Initial velocity is zero
-                    sf::Vector2f(0.0f, 1.0f), // Move downwards
+                    sf::Vector2f(1.0f, 1.0f),
+                    sf::Vector2f(0.0f, 0.0f),
                     window,
                     projectileAcceleration
                 ));
@@ -71,15 +69,13 @@ int main() {
                 spawnTimer = 0;
             }
 
-            for (auto it = projectiles.begin(); it != projectiles.end();) {
-                (*it)->update(deltaTime);
-                if ((*it)->getBounds().top > window.getSize().y) {
-                    it = projectiles.erase(it); // Remove projectile if it goes out of bounds
-                }
-                else {
-                    ++it;
-                }
+            // Update projectiles
+            for (const auto& projectile : Projectile::projectiles) {
+                projectile->update(deltaTime);
             }
+
+            // Remove projectiles that are off screen
+            Projectile::removeOutOfBounds();
         }
 
         // Clear the window before drawing
@@ -89,7 +85,7 @@ int main() {
         player->draw(window);
 
         // Draw projectiles
-        for (const auto& projectile : projectiles) {
+        for (const auto& projectile : Projectile::projectiles) {
             projectile->draw(window);
         }
 
