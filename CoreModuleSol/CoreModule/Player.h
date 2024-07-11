@@ -2,9 +2,11 @@
 #define PLAYER_H
 
 #include <SFML/Graphics.hpp>
-#include "Projectile.h"
+#include "Bounds.h"
 #include <vector>
 #include <memory>
+
+class Projectile;
 
 class Player {
 public:
@@ -20,15 +22,21 @@ public:
         float shootingCooldown
     );
 
-    void movement(float deltaTime);
+    void update(float deltaTime);
+    void shoot();
     void draw(sf::RenderWindow& window);
     float normalizeDirection(float x);
-    void shoot();
-    sf::FloatRect getBounds() const;
+
+    // Custom methods for bounds
+    sf::Vector2f getPosition() const;
+    sf::Vector2f getSize() const;
+    Bounds calculateBounds() const;
+
+    bool intersects(const Projectile& projectile) const;
 
 private:
     sf::RectangleShape shape;
-    sf::Vector2f Size;
+    sf::Vector2f size;
     sf::Vector2f vel;
     sf::Vector2f direction;
     sf::RenderWindow& window;
@@ -37,6 +45,10 @@ private:
     float stoppingFactor;
     float shootingCooldown;
     float shootingTimer;
+
+    sf::Vector2f customPosition;
+    sf::Vector2f customSize;
+    sf::Vector2u windowSize;
 };
 
 #endif

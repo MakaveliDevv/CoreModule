@@ -1,7 +1,9 @@
 #include "Projectile.h"
+#include "Player.h"
 #include <algorithm>
+#include <iostream>
 
-std::vector<std::unique_ptr<Projectile>> Projectile::projectile;
+std::vector<std::unique_ptr<Projectile>> Projectile::projectiles;
 
 Projectile::Projectile(
     const sf::Vector2f& position,
@@ -10,41 +12,43 @@ Projectile::Projectile(
     const sf::Vector2f& velocity,
     sf::RenderWindow& window,
     float acceleration,
+    const std::string& type,
     const sf::Color& color
 )
-    : Size(size), direction(direction), window(window), acceleration(acceleration), vel(velocity), outOfBounds(false) {
-    shape.setSize(Size);
-    shape.setPosition(position);
+    : customPosition(position), customSize(size), direction(direction), window(window), acceleration(acceleration), vel(velocity), outOfBounds(false), type(type), color(color) {
+    shape.setSize(customSize);
+    shape.setPosition(customPosition);
     shape.setFillColor(color);
 
-    // Initialize velocity based on direction and acceleration
-    if (acceleration != 0.0f) {
-        vel = direction * acceleration;
-    }
+    vel = direction * acceleration;
+
+    projectiles.push_back(std::make_unique<Projectile>(*this));
 }
 
 void Projectile::update(float deltaTime) {
-    // Update position with constant velocity
-    shape.move(vel * deltaTime);
+    customPosition += vel * deltaTime;
 
-    // For increasing velocity when traveling
-    //vel += direction * acceleration * deltaTime;
+    if (customPosition.y < 0 || customPosition.y + customSize.y > window.getSize().y) {
+        outOfBounds = true;
+    }
+    else if (customPosition.x < 0 || customPosition.x + customSize.x > window.getSize().x) {
+        vel.x = -vel.x;
+    }
 
-    sf::Vector2f position = shape.getPosition();
-    if (position.y < 0 || position.y + shape.getSize().y > window.getSize().y) outOfBounds = true;
-   
-    // Ensure projectile stays within window x axis bounds
-    else if (position.x < 0 || position.x + shape.getSize().x > window.getSize().x) vel.x = -vel.x;
-    
-    shape.setPosition(position);
+    shape.setPosition(customPosition);
 }
 
 void Projectile::draw(sf::RenderWindow& window) {
     window.draw(shape);
 }
 
-sf::FloatRect Projectile::getBounds() const {
-    return shape.getGlobalBounds();
+Bounds Projectile::calculateBounds() const {
+    Bounds bounds{};
+    bounds.left = customPosition.x;
+    bounds.top = customPosition.y;
+    bounds.right = customPosition.x + customSize.x;
+    bounds.bottom = customPosition.y + customSize.y;
+    return bounds;
 }
 
 bool Projectile::isOutOfBounds() const {
@@ -52,30 +56,50 @@ bool Projectile::isOutOfBounds() const {
 }
 
 void Projectile::removeOutOfBounds() {
-    projectile.erase(std::remove_if(
-        projectile.begin(),
-        projectile.end(),
+    projectiles.erase(std::remove_if(
+        projectiles.begin(),
+        projectiles.end(),
         [](const std::unique_ptr<Projectile>& p) {
             return p->isOutOfBounds();
         }),
-        projectile.end());
+        projectiles.end());
 }
 
-float Projectile::normalizeDirection(float x) {
-    if (x == 0.0f || x == 1.0f) {
-        return x;
+void Projectile::checkCollisionWithPlayer(Player& player) {
+    if (type == "falling" && player.intersects(*this)) {
+
+        std::cout << "Collision between falling projectile and player!" << std::endl;
     }
-
-    float c = x / 2.0f;
-    float value = 0.000f;
-
-    while (std::abs(c * c - x) > value) {
-        c = (c + x / c) / 2.0f;
-    }
-
-    return c;
 }
 
+void Projectile::checkCollisionWithProjectile(Projectile& other) const {
+    if (type == "shooting" && other.type == "falling" && calculateBounds().intersects(other.calculateBounds())) {
+      
+
+        std::cout << "Collision between shooting projectile and falling projectile!" << std::endl;
+    }
+}
+
+/*
 void Projectile::checkCollisions() {
+    for (size_t i = 0; i < projectiles.size(); ++i) {
+        for (size_t j = i + 1; j < projectiles.size(); ++j) {
+            if (projectiles[i]->calculateBounds().intersects(projectiles[j]->calculateBounds())) {
+                projectiles[i]->outOfBounds = true;
+                projectiles[j]->outOfBounds = true;
+            }
+        }
+    }
 
+    // Remove projectiles that are marked as out of bounds
+    auto it = projectiles.begin();
+    while (it != projectiles.end()) {
+        if ((*it)->isOutOfBounds()) {
+            it = projectiles.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
 }
+*/

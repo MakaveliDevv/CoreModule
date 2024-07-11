@@ -4,6 +4,9 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <memory>
+#include <string> 
+#include "Player.h"
+#include "Bounds.h"
 
 class Projectile {
 public:
@@ -14,28 +17,36 @@ public:
         const sf::Vector2f& velocity,
         sf::RenderWindow& window,
         float acceleration,
+        const std::string& type,
         const sf::Color& color
     );
 
     void update(float deltaTime);
     void draw(sf::RenderWindow& window);
-    float normalizeDirection(float x);
-    sf::FloatRect getBounds() const;
+    void checkCollisionWithPlayer(Player& player);
+    void checkCollisionWithProjectile(Projectile& other) const; 
 
+    Bounds calculateBounds() const;
     bool isOutOfBounds() const;
     static void removeOutOfBounds();
-    void checkCollisions();
+    //static void checkCollisions();
 
-    static std::vector<std::unique_ptr<Projectile>> projectile;
+    static std::vector<std::unique_ptr<Projectile>> projectiles;
 
-protected:
+private:
     sf::RectangleShape shape;
-    sf::Vector2f Size;
+    sf::Vector2f size;
     sf::Vector2f vel;
     sf::Vector2f direction;
     sf::RenderWindow& window;
+    sf::Color color;
     float acceleration;
     bool outOfBounds;
+
+    std::string type;
+
+    sf::Vector2f customPosition;
+    sf::Vector2f customSize;
 };
 
-#endif
+#endif // PROJECTILE_H
