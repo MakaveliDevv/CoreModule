@@ -42,6 +42,14 @@ void Projectile::draw(sf::RenderWindow& window) {
     window.draw(shape);
 }
 
+sf::Vector2f Projectile::getPosition() const {
+    return customPosition;
+}
+
+sf::Vector2f Projectile::getSize() const {
+    return customSize;
+}
+
 Bounds Projectile::calculateBounds() const {
     Bounds bounds{};
     bounds.left = customPosition.x;
@@ -55,6 +63,45 @@ bool Projectile::isOutOfBounds() const {
     return outOfBounds;
 }
 
+
+
+void Projectile::checkCollisionWithPlayer(Player& player) const {
+    if (type == "falling" && player.collision(*this)) {
+        std::cout << "Collision between falling projectile and player!" << std::endl;
+
+    }
+}
+
+void Projectile::checkCollisionWithProjectile(Projectile& other) const {
+    if (type == "shooting" && other.type == "falling" && calculateBounds().collides(other.calculateBounds())) {
+      
+
+        std::cout << "Collision between shooting projectile and falling projectile!" << std::endl;
+    }
+}
+
+void Projectile::removeOutOfBounds(){
+    size_t numProjectiles = 0;
+    for (const auto& projectile : projectiles) {
+        if (projectile) {
+            ++numProjectiles;
+        }
+    }
+
+    for (size_t i = 0; i < numProjectiles;) {
+        if (projectiles[i]->isOutOfBounds()) {
+            projectiles.erase(projectiles.begin() + i);
+            --numProjectiles;
+        }
+        else {
+            ++i;
+        }
+    }
+}
+
+
+
+/*
 void Projectile::removeOutOfBounds() {
     projectiles.erase(std::remove_if(
         projectiles.begin(),
@@ -65,22 +112,6 @@ void Projectile::removeOutOfBounds() {
         projectiles.end());
 }
 
-void Projectile::checkCollisionWithPlayer(Player& player) {
-    if (type == "falling" && player.intersects(*this)) {
-
-        std::cout << "Collision between falling projectile and player!" << std::endl;
-    }
-}
-
-void Projectile::checkCollisionWithProjectile(Projectile& other) const {
-    if (type == "shooting" && other.type == "falling" && calculateBounds().intersects(other.calculateBounds())) {
-      
-
-        std::cout << "Collision between shooting projectile and falling projectile!" << std::endl;
-    }
-}
-
-/*
 void Projectile::checkCollisions() {
     for (size_t i = 0; i < projectiles.size(); ++i) {
         for (size_t j = i + 1; j < projectiles.size(); ++j) {

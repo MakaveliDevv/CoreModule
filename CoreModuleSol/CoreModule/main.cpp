@@ -7,7 +7,6 @@
 #include <iostream>
 #include <memory>
 
-// Function to get window size
 sf::Vector2u getWindowSize(const sf::RenderWindow& window) {
     return window.getSize();
 }

@@ -117,7 +117,7 @@ void Player::shoot() {
 }
 
 Bounds Player::calculateBounds() const {
-    Bounds bounds;
+    Bounds bounds{};
     bounds.left = customPosition.x;
     bounds.top = customPosition.y;
     bounds.right = customPosition.x + customSize.x;
@@ -125,11 +125,11 @@ Bounds Player::calculateBounds() const {
     return bounds;
 }
 
-bool Player::intersects(const Projectile& projectile) const {
+bool Player::collision(const Projectile& projectile) const {
     Bounds playerBounds = calculateBounds();
     Bounds projectileBounds = projectile.calculateBounds();
 
-    return playerBounds.intersects(projectileBounds);
+    return playerBounds.collides(projectileBounds);
 }
 
 void Player::draw(sf::RenderWindow& window) {

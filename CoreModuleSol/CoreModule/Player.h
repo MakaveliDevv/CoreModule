@@ -32,7 +32,7 @@ public:
     sf::Vector2f getSize() const;
     Bounds calculateBounds() const;
 
-    bool intersects(const Projectile& projectile) const;
+    bool collision(const Projectile& projectile) const;
 
 private:
     sf::RectangleShape shape;

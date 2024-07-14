@@ -23,8 +23,11 @@ public:
 
     void update(float deltaTime);
     void draw(sf::RenderWindow& window);
-    void checkCollisionWithPlayer(Player& player);
+    void checkCollisionWithPlayer(Player& player) const;
     void checkCollisionWithProjectile(Projectile& other) const; 
+
+    sf::Vector2f getPosition() const;
+    sf::Vector2f getSize() const;
 
     Bounds calculateBounds() const;
     bool isOutOfBounds() const;
@@ -49,4 +52,4 @@ private:
     sf::Vector2f customSize;
 };
 
-#endif // PROJECTILE_H
+#endif 

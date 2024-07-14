@@ -7,9 +7,14 @@ struct Bounds {
     float right;
     float bottom;
 
-    bool intersects(const Bounds& other) const {
-        return !(right < other.left || left > other.right || bottom < other.top || top > other.bottom);
+    bool collides(const Bounds& other) const {
+        if (right < other.left || left > other.right || bottom < other.top || top > other.bottom) {
+            return false;
+        }
+        else {
+            return true;
+        }
     }
 };
 
-#endif // BOUNDS_H
+#endif 
