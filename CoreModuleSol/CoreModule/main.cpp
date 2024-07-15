@@ -7,32 +7,31 @@
 #include <iostream>
 #include <memory>
 
-sf::Vector2u getWindowSize(const sf::RenderWindow& window) {
-    return window.getSize();
-}
-
 int main() {
+    // Define initial window size
+    sf::Vector2u windowSize(600, 800);
+
     // Window init
-    sf::RenderWindow window(sf::VideoMode(600, 800), "Makaveli");
+    sf::RenderWindow window(sf::VideoMode(windowSize.x, windowSize.y), "Makaveli");
 
     // Player init
     std::unique_ptr<Player> player = std::make_unique<Player>(
-        sf::Vector2f(300, 750),
-        sf::Vector2f(50.0f, 50.0f),
-        sf::Vector2f(0.0f, 0.0f),
-        sf::Vector2f(0.0f, 0.0f),
-        window,
-        500.0f,
-        0.25f,
-        0.5f,
-        0.5f
+        sf::Vector2f(300, 750), // Initial player position
+        sf::Vector2f(50.0f, 50.0f), // Player size
+        sf::Vector2f(0.0f, 0.0f), // Initial velocity
+        sf::Vector2f(0.0f, 0.0f), // Initial direction
+        500.0f, // Acceleration
+        0.25f, // Friction
+        0.5f, // Stopping factor
+        0.5f, // Shooting cooldown
+        windowSize // Initial window size passed to Player constructor
     );
 
     // Game's clock
     sf::Clock clock;
 
     float spawnTimer = 0;
-    float spawnInterval = 1.0f; 
+    float spawnInterval = 1.0f;
     float projectileAcceleration = 200.0f;
 
     srand(static_cast<unsigned>(time(0)));
@@ -59,18 +58,21 @@ int main() {
             spawnTimer += deltaTime;
             if (spawnTimer >= spawnInterval) {
                 // Generate a random value on the x axis based on the window size
-                float x = static_cast<float>(rand() % getWindowSize(window).x);
+                float x = static_cast<float>(rand() % windowSize.x);
+
+                int randomDirection = (std::rand() % 2 == 0 ? -1 : 1);
+                sf::Vector2f direction = sf::Vector2f(randomDirection, 1);
 
                 // Initial direction is downwards, acceleration is set
                 Projectile::projectiles.emplace_back(std::make_unique<Projectile>(
                     sf::Vector2f(x, 0),
                     sf::Vector2f(30.0f, 30.0f),
-                    sf::Vector2f(1.0f, 1.0f),
+                    direction,
                     sf::Vector2f(0.0f, 200.0f),
-                    window,
-                    projectileAcceleration,
+                    300.0f,
                     "falling",
-                    sf::Color::Red
+                    sf::Color::Red,
+                    windowSize
                 ));
 
                 spawnTimer = 0;
@@ -88,7 +90,6 @@ int main() {
                     }
                 }
             }
-
 
             // Remove projectiles that are off screen
             Projectile::removeOutOfBounds();

@@ -6,21 +6,28 @@ Player::Player(
     const sf::Vector2f& size,
     const sf::Vector2f& velocity,
     const sf::Vector2f& direction,
-    sf::RenderWindow& window,
     float acceleration,
     float friction,
     float stoppingFactor,
-    float shootingCooldown
+    float shootingCooldown,
+    const sf::Vector2u& initialWindowSize
 )
-    : size(size), vel(velocity), direction(direction), window(window), acceleration(acceleration), friction(friction), stoppingFactor(stoppingFactor), shootingCooldown(shootingCooldown), shootingTimer(0.0f) {
+    : customSize(size), 
+    vel(velocity), 
+    direction(direction), 
+    acceleration(acceleration), 
+    friction(friction), 
+    stoppingFactor(stoppingFactor), 
+    shootingCooldown(shootingCooldown), 
+    shootingTimer(0.0f),  
+    windowSize(initialWindowSize) {
+
     customPosition = position;
     shape.setPosition(customPosition);
     shape.setSize(size);
     shape.setFillColor(sf::Color::Green);
 
     vel = direction * acceleration;
-
-    windowSize = window.getSize();
 }
 
 void Player::update(float deltaTime) {
@@ -59,6 +66,7 @@ void Player::update(float deltaTime) {
 
     customPosition += vel * deltaTime;
 
+    // Ensure player stays within window bounds
     if (customPosition.x < 0) {
         customPosition.x = 0;
         vel.x = std::max(vel.x, 0.0f);
@@ -77,6 +85,11 @@ void Player::update(float deltaTime) {
     }
 }
 
+
+void Player::setWindowSize(const sf::Vector2u& size) {
+    windowSize = size;
+}
+
 sf::Vector2f Player::getPosition() const {
     return customPosition;
 }
@@ -85,7 +98,6 @@ sf::Vector2f Player::getSize() const {
     return customSize;
 }
 
-// Method to normalize direction
 float Player::normalizeDirection(float x) {
     if (x == 0.0f || x == 1.0f) {
         return x;
@@ -101,18 +113,17 @@ float Player::normalizeDirection(float x) {
     return normalize;
 }
 
-// Method to shoot projectiles
-void Player::shoot() {
-    sf::Vector2f projectilePosition = (*this).getPosition() + sf::Vector2f(size.x / 2.0f, 0.0f);
+void Player::shoot() const {
+    sf::Vector2f projectilePosition = getPosition() + sf::Vector2f(customSize.x / 2.0f, 0.0f);
     Projectile::projectiles.emplace_back(std::make_unique<Projectile>(
         projectilePosition,
         sf::Vector2f(10.0f, 10.0f),
         sf::Vector2f(0.0f, -1.0f),
         sf::Vector2f(0.0f, 0.0f),
-        window,
         300.0f,
         "shooting",
-        sf::Color::Blue
+        sf::Color::Blue,
+        windowSize
     ));
 }
 

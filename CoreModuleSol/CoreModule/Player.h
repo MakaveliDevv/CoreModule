@@ -3,10 +3,10 @@
 
 #include <SFML/Graphics.hpp>
 #include "Bounds.h"
+#include "Projectile.h"
 #include <vector>
 #include <memory>
-
-class Projectile;
+#include <iostream>
 
 class Player {
 public:
@@ -15,15 +15,15 @@ public:
         const sf::Vector2f& size,
         const sf::Vector2f& velocity,
         const sf::Vector2f& direction,
-        sf::RenderWindow& window,
         float acceleration,
         float friction,
         float stoppingFactor,
-        float shootingCooldown
+        float shootingCooldown,
+        const sf::Vector2u& initialWindowSize 
     );
 
     void update(float deltaTime);
-    void shoot();
+    void shoot() const;
     void draw(sf::RenderWindow& window);
     float normalizeDirection(float x);
 
@@ -33,22 +33,21 @@ public:
     Bounds calculateBounds() const;
 
     bool collision(const Projectile& projectile) const;
+    void setWindowSize(const sf::Vector2u& size);
 
 private:
     sf::RectangleShape shape;
-    sf::Vector2f size;
     sf::Vector2f vel;
     sf::Vector2f direction;
-    sf::RenderWindow& window;
+    sf::Vector2f customPosition;
+    sf::Vector2f customSize;
+    sf::Vector2u windowSize;
+
     float acceleration;
     float friction;
     float stoppingFactor;
     float shootingCooldown;
     float shootingTimer;
-
-    sf::Vector2f customPosition;
-    sf::Vector2f customSize;
-    sf::Vector2u windowSize;
 };
 
-#endif
+#endif // PLAYER_H
