@@ -7,6 +7,14 @@
 #include <iostream>
 #include <memory>
 
+const int MAX_SCORE = 500;
+const float GAME_DURATION = 300.0f;
+
+// Function to generate a random float between min and max
+float getRandomFloat(float min, float max) {
+    return min + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (max - min)));
+}
+
 int main() {
     // Define initial window size
     sf::Vector2u windowSize(600, 800);
@@ -32,7 +40,8 @@ int main() {
 
     float spawnTimer = 0;
     float spawnInterval = 1.0f;
-    float projectileAcceleration = 200.0f;
+    float specialSpawnTimer = 0;
+    float specialSpawnInterval = getRandomFloat(5.0f, 15.0f); // Random interval for special projectile
 
     srand(static_cast<unsigned>(time(0)));
 
@@ -50,12 +59,15 @@ int main() {
 
         // Assign the time to a variable
         float deltaTime = clock.restart().asSeconds();
+        float elapsedTime = clock.getElapsedTime().asSeconds();
 
         if (!gameOver && !gameWin) {
             // Update player
             player->update(deltaTime);
 
             spawnTimer += deltaTime;
+            specialSpawnTimer += deltaTime;
+
             if (spawnTimer >= spawnInterval) {
                 // Generate a random value on the x axis based on the window size
                 float x = static_cast<float>(rand() % windowSize.x);
@@ -63,7 +75,7 @@ int main() {
                 int randomDirection = (std::rand() % 2 == 0 ? -1 : 1);
                 sf::Vector2f direction = sf::Vector2f(randomDirection, 1);
 
-                // Initial direction is downwards, acceleration is set
+                // Spawn regular falling projectile
                 Projectile::projectiles.emplace_back(std::make_unique<Projectile>(
                     sf::Vector2f(x, 0),
                     sf::Vector2f(30.0f, 30.0f),
@@ -76,6 +88,29 @@ int main() {
                 ));
 
                 spawnTimer = 0;
+            }
+
+            if (specialSpawnTimer >= specialSpawnInterval) {
+                // Generate a random value on the x axis based on the window size
+                float x = static_cast<float>(rand() % windowSize.x);
+
+                int randomDirection = (std::rand() % 2 == 0 ? -1 : 1);
+                sf::Vector2f direction = sf::Vector2f(randomDirection, 1);
+
+                // Spawn special projectile with random color and speed
+                Projectile::projectiles.emplace_back(std::make_unique<Projectile>(
+                    sf::Vector2f(x, 0),
+                    sf::Vector2f(30.0f, 30.0f),
+                    direction,
+                    sf::Vector2f(0.0f, getRandomFloat(100.0f, 300.0f)),
+                    300.0f,
+                    "falling",
+                    sf::Color::Yellow,
+                    windowSize
+                ));
+
+                specialSpawnTimer = 0;
+                specialSpawnInterval = getRandomFloat(5.0f, 15.0f); // Reset the special spawn interval
             }
 
             // Update projectiles
@@ -93,6 +128,16 @@ int main() {
 
             // Remove projectiles that are off screen
             Projectile::removeOutOfBounds();
+
+            // Check for game win
+            if (score >= MAX_SCORE) {
+                gameWin = true;
+            }
+
+            // Check for game over by timer
+            if (elapsedTime >= GAME_DURATION) {
+                gameOver = true;
+            }
         }
 
         // Clear the window before drawing
@@ -104,6 +149,44 @@ int main() {
         // Draw projectiles
         for (const auto& projectile : Projectile::projectiles) {
             projectile->draw(window);
+        }
+
+        // Draw game over screen
+        if (gameOver) {
+            sf::Font font;
+            if (font.loadFromFile("arial.ttf")) { // Make sure you have the font file
+                sf::Text text("Game Over", font, 50);
+                text.setFillColor(sf::Color::Red);
+                text.setPosition(windowSize.x / 2 - text.getLocalBounds().width / 2, windowSize.y / 2 - text.getLocalBounds().height / 2);
+                window.draw(text);
+            }
+        }
+
+        // Draw game win screen
+        if (gameWin) {
+            sf::Font font;
+            if (font.loadFromFile("arial.ttf")) { // Make sure you have the font file
+                sf::Text text("You Win!", font, 50);
+                text.setFillColor(sf::Color::Green);
+                text.setPosition(windowSize.x / 2 - text.getLocalBounds().width / 2, windowSize.y / 2 - text.getLocalBounds().height / 2);
+                window.draw(text);
+            }
+        }
+
+        // Display the score
+        sf::Font font;
+        if (font.loadFromFile("arial.ttf")) { // Make sure you have the font file
+            sf::Text scoreText("Score: " + std::to_string(score), font, 20);
+            scoreText.setFillColor(sf::Color::White);
+            scoreText.setPosition(10, 10);
+            window.draw(scoreText);
+
+            // Display the timer
+            int timeLeft = static_cast<int>(GAME_DURATION - elapsedTime);
+            sf::Text timerText("Time: " + std::to_string(timeLeft), font, 20);
+            timerText.setFillColor(sf::Color::White);
+            timerText.setPosition(10, 40);
+            window.draw(timerText);
         }
 
         // Display what has been drawn

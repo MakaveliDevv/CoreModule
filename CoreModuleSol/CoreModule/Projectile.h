@@ -44,12 +44,16 @@ private:
     sf::Color color;
     float acceleration;
     bool outOfBounds;
+    bool markedForRemoval;  // New flag for marking projectile for removal
 
     std::string type;
 
     sf::Vector2f customPosition;
     sf::Vector2f customSize;
     const sf::Vector2u& windowSize;
+
+    void markForRemoval();  // New method to mark projectile for removal
+    bool isMarkedForRemoval() const;  // New method to check if projectile is marked for removal
 };
 
 #endif

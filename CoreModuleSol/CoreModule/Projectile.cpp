@@ -11,7 +11,7 @@ Projectile::Projectile(
     float acceleration,
     const std::string& type,
     const sf::Color& color,
-    const sf::Vector2u& playerWindowSize 
+    const sf::Vector2u& playerWindowSize
 )
     : customPosition(position),
     customSize(size),
@@ -21,7 +21,8 @@ Projectile::Projectile(
     outOfBounds(false),
     type(type),
     color(color),
-    windowSize(playerWindowSize) 
+    windowSize(playerWindowSize),
+    markedForRemoval(false)  // Initialize the flag
 {
     shape.setSize(customSize);
     shape.setPosition(customPosition);
@@ -31,7 +32,6 @@ Projectile::Projectile(
 
     projectiles.push_back(std::make_unique<Projectile>(*this));
 }
-
 
 void Projectile::update(float deltaTime) {
     customPosition += vel * deltaTime;
@@ -71,8 +71,17 @@ bool Projectile::isOutOfBounds() const {
     return outOfBounds;
 }
 
+void Projectile::markForRemoval() {
+    markedForRemoval = true;
+}
+
+bool Projectile::isMarkedForRemoval() const {
+    return markedForRemoval;
+}
+
 void Projectile::checkCollisionWithPlayer(Player& player) const {
     if (type == "falling" && player.collision(*this)) {
+        const_cast<Projectile*>(this)->markForRemoval();  // Mark this projectile for removal
         std::cout << "Collision between falling projectile and player!" << std::endl;
     }
 }
@@ -80,6 +89,8 @@ void Projectile::checkCollisionWithPlayer(Player& player) const {
 void Projectile::checkCollisionWithProjectile(Projectile& other) const {
     if (type == "shooting" && other.type == "falling" && calculateBounds().collides(other.calculateBounds())) {
         std::cout << "Collision between shooting projectile and falling projectile!" << std::endl;
+        const_cast<Projectile&>(other).markForRemoval();  // Mark the other projectile for removal
+        const_cast<Projectile*>(this)->markForRemoval();  // Mark this projectile for removal
     }
 }
 
@@ -89,7 +100,7 @@ void Projectile::removeOutOfBounds() {
             projectiles.begin(),
             projectiles.end(),
             [](const std::unique_ptr<Projectile>& p) {
-                return p->isOutOfBounds();
+                return p->isOutOfBounds() || p->isMarkedForRemoval();
             }
         ),
         projectiles.end()
