@@ -1,6 +1,7 @@
 #include "Projectile.h"
 #include "Player.h" 
 
+int score = 0;
 std::vector<std::unique_ptr<Projectile>> Projectile::projectiles;
 
 Projectile::Projectile(
@@ -22,7 +23,7 @@ Projectile::Projectile(
     type(type),
     color(color),
     windowSize(playerWindowSize),
-    markedForRemoval(false)  // Initialize the flag
+    markedForRemoval(false) 
 {
     shape.setSize(customSize);
     shape.setPosition(customPosition);
@@ -81,18 +82,31 @@ bool Projectile::isMarkedForRemoval() const {
 
 void Projectile::checkCollisionWithPlayer(Player& player) const {
     if (type == "falling" && player.collision(*this)) {
-        const_cast<Projectile*>(this)->markForRemoval();  // Mark this projectile for removal
+        const_cast<Projectile*>(this)->markForRemoval();
         std::cout << "Collision between falling projectile and player!" << std::endl;
     }
 }
 
 void Projectile::checkCollisionWithProjectile(Projectile& other) const {
-    if (type == "shooting" && other.type == "falling" && calculateBounds().collides(other.calculateBounds())) {
-        std::cout << "Collision between shooting projectile and falling projectile!" << std::endl;
-        const_cast<Projectile&>(other).markForRemoval();  // Mark the other projectile for removal
-        const_cast<Projectile*>(this)->markForRemoval();  // Mark this projectile for removal
+    if (type == "shooting") {
+        if (other.type == "falling" && calculateBounds().collides(other.calculateBounds())) {
+            score += 5;
+            std::cout << "Collision detected: +5 points" << std::endl; // Debug output
+            const_cast<Projectile&>(other).markForRemoval();
+            const_cast<Projectile*>(this)->markForRemoval();
+            return;
+        }
+
+        if (other.type == "special_falling" && calculateBounds().collides(other.calculateBounds())) {
+            score += 10;
+            std::cout << "Special collision detected: +10 points" << std::endl; // Debug output
+            const_cast<Projectile&>(other).markForRemoval();
+            const_cast<Projectile*>(this)->markForRemoval();
+            return;
+        }
     }
 }
+
 
 void Projectile::removeOutOfBounds() {
     projectiles.erase(

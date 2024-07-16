@@ -9,6 +9,8 @@
 
 class Player;
 
+extern int score;
+
 class Projectile {
 public:
     Projectile(
@@ -44,7 +46,7 @@ private:
     sf::Color color;
     float acceleration;
     bool outOfBounds;
-    bool markedForRemoval;  // New flag for marking projectile for removal
+    bool markedForRemoval;
 
     std::string type;
 
@@ -52,8 +54,8 @@ private:
     sf::Vector2f customSize;
     const sf::Vector2u& windowSize;
 
-    void markForRemoval();  // New method to mark projectile for removal
-    bool isMarkedForRemoval() const;  // New method to check if projectile is marked for removal
+    void markForRemoval();  
+    bool isMarkedForRemoval() const; 
 };
 
 #endif
