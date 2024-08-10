@@ -1,8 +1,6 @@
 #include "Projectile.h"
 #include "Player.h" 
 
-//int score = 0;
-int Projectile::score = 0;
 std::vector<std::unique_ptr<Projectile>> Projectile::projectiles;
 
 Projectile::Projectile(
@@ -13,7 +11,8 @@ Projectile::Projectile(
     float acceleration,
     const std::string& type,
     const sf::Color& color,
-    const sf::Vector2u& playerWindowSize
+    const sf::Vector2u& playerWindowSize,
+    bool isPowerShot
 )
     : customPosition(position),
     customSize(size),
@@ -24,7 +23,8 @@ Projectile::Projectile(
     type(type),
     color(color),
     windowSize(playerWindowSize),
-    markedForRemoval(false)
+    markedForRemoval(false),
+    powerShot(isPowerShot)
 {
     shape.setSize(customSize);
     shape.setPosition(customPosition);
@@ -35,16 +35,32 @@ Projectile::Projectile(
 
 
 void Projectile::update(float deltaTime, float elapsedTime) {
-    if(elapsedTime < 15.0f) {
-        customPosition += vel * deltaTime;
-        shape.setPosition(customPosition);     
+    
+    if (powerShot) {
+        vel += direction * acceleration * deltaTime;
     }
-    else if (elapsedTime > 15.0f) {
-        std::cout << "Timer reached the 200.0f seconds mark" << std::endl;
+    customPosition += vel * deltaTime;
+    shape.setPosition(customPosition);
+    /*
+    if(elapsedTime < 15.0f) {
+    }
+    if (Player::returnPowerShot()) {
         vel += direction * acceleration * deltaTime;
         customPosition += vel * deltaTime;
         shape.setPosition(customPosition);
     }
+    else {
+        customPosition += vel * deltaTime;
+        shape.setPosition(customPosition);
+    }
+    /*
+    else if (elapsedTime > 15.0f) {
+        std::cout << "Timer reached the 15 seconds mark" << std::endl;
+        vel += direction * acceleration * deltaTime;
+        customPosition += vel * deltaTime;
+        shape.setPosition(customPosition);
+    }
+    */
 
     if (customPosition.y < 0 || customPosition.y + customSize.y > windowSize.y) {
         outOfBounds = true;
@@ -58,11 +74,11 @@ void Projectile::draw(sf::RenderWindow& window) {
     window.draw(shape);
 }
 
-sf::Vector2f Projectile::getPosition() const {
+sf::Vector2f Projectile::getPosition() {
     return customPosition;
 }
 
-sf::Vector2f Projectile::getSize() const {
+sf::Vector2f Projectile::getSize() {
     return customSize;
 }
 
@@ -75,7 +91,7 @@ Bounds Projectile::calculateBounds() const {
     return bounds;
 }
 
-bool Projectile::isOutOfBounds() const {
+bool Projectile::isOutOfBounds() {
     return outOfBounds;
 }
 
@@ -83,14 +99,13 @@ void Projectile::markForRemoval() {
     markedForRemoval = true;
 }
 
-bool Projectile::isMarkedForRemoval() const {
+bool Projectile::isMarkedForRemoval() {
     return markedForRemoval;
 }
 
-void Projectile::checkCollisionWithPlayer(Player& player) const {
+void Projectile::checkCollisionWithPlayer(Player& player, int& score) {
     if (this->type != "shooting_projectile" && player.collision(*this)) {
         const_cast<Projectile*>(this)->markForRemoval();
-        //std::cout << "Collision between projectile and player!" << std::endl;
 
         if (this->type == "destructive_projectile" && player.collision(*this)) {
             score -= 10;
@@ -99,9 +114,9 @@ void Projectile::checkCollisionWithPlayer(Player& player) const {
     }
 }
 
-void Projectile::checkCollisionWithProjectile(Projectile& other) {
+void Projectile::checkCollisionWithProjectile(Projectile& other, int& score) {
     if (this == &other || this->isMarkedForRemoval() || other.isMarkedForRemoval()) {
-        return; // Skip if it's the same projectile or if either is marked for removal
+        return; 
     }
 
     if (this->type == "shooting_projectile" && (other.type == "normal_projectile" 
@@ -111,18 +126,18 @@ void Projectile::checkCollisionWithProjectile(Projectile& other) {
         if (calculateBounds().intercepts(other.calculateBounds())) {
             if (other.type == "normal_projectile") {
                 score += 5;
-                std::cout << "Collision detected: +5 points" << std::endl;
+                //std::cout << "Collision detected: +5 points" << std::endl;
             }
             else if (other.type == "special_projectile") {
                 score += 10;
-                std::cout << "Collision detected with a special projectile: +10 points" << std::endl;
+                //std::cout << "Collision detected with a special projectile: +10 points" << std::endl;
             }
             else if(other.type == "destructive_projectile") 
             {
                 score -= 5;
-                std::cout << "Collision detected with destructive projectile: -5 points" << std::endl;
+                //std::cout << "Collision detected with destructive projectile: -5 points" << std::endl;
             }
-            // Mark both projectiles for removal
+
             other.markForRemoval();
             this->markForRemoval();
         }
@@ -134,7 +149,7 @@ void Projectile::checkCollisionWithProjectile(Projectile& other) {
     }
 }
 
-int Projectile::returnScore() {
+int Projectile::returnScore(int& score) {
     return score;
 }
 

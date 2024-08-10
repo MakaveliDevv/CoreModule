@@ -19,21 +19,22 @@ public:
         float friction,
         float stoppingFactor,
         float shootingCooldown,
+        float powerShotCooldown,
         const sf::Vector2u& initialWindowSize 
     );
 
     void update(float deltaTime);
-    void shoot() const;
+    void shoot();
+    void shootWithPower();
     void draw(sf::RenderWindow& window);
     float normalizeDirection(float x);
 
-    // Custom methods for bounds
-    sf::Vector2f getPosition() const;
-    sf::Vector2f getSize() const;
-    Bounds calculateBounds() const;
+    sf::Vector2f getPosition();
+    sf::Vector2f getSize();
+    Bounds calculateBounds();
 
-    bool collision(const Projectile& projectile) const;
-    void setWindowSize(const sf::Vector2u& size);
+    bool collision(const Projectile& projectile);
+    void setWindowSize(const sf::Vector2u& size);        
 
 private:
     sf::RectangleShape shape;
@@ -46,8 +47,12 @@ private:
     float acceleration;
     float friction;
     float stoppingFactor;
+
     float shootingCooldown;
     float shootingTimer;
+
+    float powerShotCooldown;
+    float powerShotTimer;
 };
 
 #endif // PLAYER_H

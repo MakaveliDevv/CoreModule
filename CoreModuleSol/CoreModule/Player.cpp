@@ -10,17 +10,26 @@ Player::Player(
     float friction,
     float stoppingFactor,
     float shootingCooldown,
+    float powerShotCooldown,
     const sf::Vector2u& initialWindowSize
 )
     : customSize(size), 
     vel(velocity), 
     direction(direction), 
     acceleration(acceleration), 
+
     friction(friction), 
     stoppingFactor(stoppingFactor), 
+
     shootingCooldown(shootingCooldown), 
-    shootingTimer(0.0f),  
-    windowSize(initialWindowSize) {
+    shootingTimer(0.0f),
+
+    powerShotCooldown(powerShotCooldown),
+    powerShotTimer(0.0f),
+
+    windowSize(initialWindowSize)
+//    powerShot(false)
+{
 
     customPosition = position;
     shape.setPosition(customPosition);
@@ -33,6 +42,7 @@ Player::Player(
 void Player::update(float deltaTime) {
     // Update shooting timer
     shootingTimer += deltaTime;
+    powerShotTimer += deltaTime;
 
     // Reset direction
     direction = sf::Vector2f(0.0f, 0.0f);
@@ -43,7 +53,7 @@ void Player::update(float deltaTime) {
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && customPosition.x + customSize.x < windowSize.x) {
         direction.x += 1.0f;
-    }
+    } 
 
     // Normalize direction
     if (direction.x != 0.0f) {
@@ -79,22 +89,28 @@ void Player::update(float deltaTime) {
     shape.setPosition(customPosition);
 
     // Handle shooting
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && shootingTimer >= shootingCooldown) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) && sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+        if (powerShotTimer >= powerShotCooldown) {
+            shootWithPower();
+            powerShotTimer = 0.0f;
+            shootingTimer = -0.5f; // Apply delay before next regular shot can be triggered
+        }
+    }
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && shootingTimer >= shootingCooldown) {
         shoot();
         shootingTimer = 0.0f;
     }
 }
 
-
 void Player::setWindowSize(const sf::Vector2u& size) {
     windowSize = size;
 }
 
-sf::Vector2f Player::getPosition() const {
+sf::Vector2f Player::getPosition() {
     return customPosition;
 }
 
-sf::Vector2f Player::getSize() const {
+sf::Vector2f Player::getSize() {
     return customSize;
 }
 
@@ -113,21 +129,37 @@ float Player::normalizeDirection(float x) {
     return normalize;
 }
 
-void Player::shoot() const {
+void Player::shoot() {
     sf::Vector2f projectilePosition = getPosition() + sf::Vector2f(customSize.x / 2.0f, 0.0f);
     Projectile::projectiles.emplace_back(std::make_unique<Projectile>(
         projectilePosition, // Start position
         sf::Vector2f(10.0f, 10.0f), // Size
         sf::Vector2f(0.0f, -1.0f), // Direction
         sf::Vector2f(0.0f, 0.0f), // Velocity
-        300.0f, // Acceleration
+        500.0f, // Acceleration
         "shooting_projectile", // Type
         sf::Color::Blue, // Color
         windowSize // Window
+        //powerShot
     ));
 }
 
-Bounds Player::calculateBounds() const {
+void Player::shootWithPower() {
+    sf::Vector2f projectilePosition = getPosition() + sf::Vector2f(customSize.x / 2.0f, 0.0f);
+    Projectile::projectiles.emplace_back(std::make_unique<Projectile>(
+        projectilePosition, // Start position
+        sf::Vector2f(20.0f, 20.0f), // Size
+        sf::Vector2f(0.0f, -1.0f), // Direction
+        sf::Vector2f(0.0f, 0.0f), // Velocity
+        750.0f, // Acceleration
+        "shooting_projectile", // Type
+        sf::Color::Cyan, // Color
+        windowSize, // Window
+        true
+    ));
+}
+
+Bounds Player::calculateBounds() {
     Bounds bounds{};
     bounds.left = customPosition.x;
     bounds.top = customPosition.y;
@@ -136,12 +168,21 @@ Bounds Player::calculateBounds() const {
     return bounds;
 }
 
-bool Player::collision(const Projectile& projectile) const {
+bool Player::collision(const Projectile& projectile) {
     Bounds playerBounds = calculateBounds();
     Bounds projectileBounds = projectile.calculateBounds();
 
     return playerBounds.intercepts(projectileBounds);
 }
+
+/*
+bool Player::isPowerShotActive() const {
+    return powerShot;
+}
+bool Player::returnPowerShot() {
+    return powerShot;
+}
+*/
 
 void Player::draw(sf::RenderWindow& window) {
     window.draw(shape);

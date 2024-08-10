@@ -9,8 +9,6 @@
 
 class Player;
 
-//extern int score;
-
 class Projectile {
 public:
     Projectile(
@@ -21,22 +19,23 @@ public:
         float acceleration,
         const std::string& type,
         const sf::Color& color,
-        const sf::Vector2u& playerWindowSize
+        const sf::Vector2u& playerWindowSize,
+        bool isPowerShot = false
     );
 
     void update(float deltaTime, float elapsedTime);
     void draw(sf::RenderWindow& window);
-    void checkCollisionWithPlayer(Player& player) const;
-    void checkCollisionWithProjectile(Projectile& other);
+    void checkCollisionWithPlayer(Player& player, int& score);
+    void checkCollisionWithProjectile(Projectile& other, int& score);
 
-    sf::Vector2f getPosition() const;
-    sf::Vector2f getSize() const;
+    sf::Vector2f getPosition();
+    sf::Vector2f getSize();
     Bounds calculateBounds() const;
 
-    bool isOutOfBounds() const;
-    static int returnScore();
-    static void removeOutOfBounds();
+    bool isOutOfBounds();
 
+    static void removeOutOfBounds();
+    static int returnScore(int& score);
     static std::vector<std::unique_ptr<Projectile>> projectiles;
 
 private:
@@ -57,8 +56,8 @@ private:
     const sf::Vector2u& windowSize;
 
     void markForRemoval();  
-    bool isMarkedForRemoval() const; 
-    static int score;
+    bool isMarkedForRemoval(); 
+    bool powerShot;
 };
 
 #endif

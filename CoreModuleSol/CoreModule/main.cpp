@@ -15,10 +15,10 @@ enum class GameState {
     GameWin
 };
 
-const int MAX_SCORE = 500;
-const float GAME_DURATION = 300.0f;
+const int MAX_SCORE = 200;
+const float GAME_DURATION = 120.0f;
 
-int score;
+int score = 0;
 bool gameOver = false;
 bool gameWin = false;
 float totalElapsedTime = 0;
@@ -60,6 +60,7 @@ int main() {
         0.25f, // Friction
         0.5f, // Stopping factor
         0.5f, // Shooting cooldown
+        1.0f, // Powershot cooldown
         windowSize // Initial window size passed to Player constructor
     );
 
@@ -135,10 +136,10 @@ int main() {
             if (event.type == sf::Event::KeyPressed) {
                 if (gameState == GameState::StartScreen) {
                     if (event.key.code == sf::Keyboard::Up) {
-                        selectedOption = (selectedOption - 1 + startScreenOptions.size()) % startScreenOptions.size();
+                        selectedOption = (static_cast<unsigned long long>(selectedOption) - 1 + startScreenOptions.size()) % startScreenOptions.size();
                     }
                     if (event.key.code == sf::Keyboard::Down) {
-                        selectedOption = (selectedOption + 1) % startScreenOptions.size();
+                        selectedOption = (static_cast<unsigned long long>(selectedOption) + 1) % startScreenOptions.size();
                     }
                     if (event.key.code == sf::Keyboard::Enter) {
                         if (selectedOption == 0) { // Play
@@ -160,37 +161,6 @@ int main() {
                 }
                 else if (gameState == GameState::RulesScreen && event.key.code == sf::Keyboard::Escape) {
                     gameState = GameState::StartScreen;
-                }
-            }
-            if (event.type == sf::Event::MouseButtonPressed) {
-                if (event.mouseButton.button == sf::Mouse::Left) {
-                    sf::Vector2i mousePos = sf::Mouse::getPosition(window);
-                    if (gameState == GameState::StartScreen) {
-                        for (int i = 0; i < startScreenOptions.size(); ++i) {
-                            if (startScreenOptions[i].getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePos))) {
-                                if (i == 0) { // Play
-                                    gameState = GameState::Playing;
-                                    // Reset game state variables
-                                    score = 0;
-                                    gameOver = false;
-                                    gameWin = false;
-                                    totalElapsedTime = 0;
-                                    Projectile::projectiles.clear();
-                                }
-                                else if (i == 1) { // Rules
-                                    gameState = GameState::RulesScreen;
-                                }
-                                else if (i == 2) { // Quit Game
-                                    window.close();
-                                }
-                            }
-                        }
-                    }
-                    else if (gameState == GameState::RulesScreen) {
-                        if (rulesText.getGlobalBounds().contains(static_cast<sf::Vector2f>(mousePos))) {
-                            gameState = GameState::StartScreen;
-                        }
-                    }
                 }
             }
         }
@@ -228,7 +198,8 @@ int main() {
                         300.0f, // Acceleration
                         "normal_projectile", // Type
                         sf::Color::White, // Color
-                        windowSize // Window
+                        windowSize, // Window
+                        false
                     ));
 
                     spawnTimer = 0;
@@ -254,7 +225,8 @@ int main() {
                         300.0f, // Acceleration
                         "special_projectile", // Type
                         sf::Color::Yellow, // Color 
-                        windowSize // Window
+                        windowSize, // Window
+                        false
                     ));
 
                     spawnTimer_2 = 0;
@@ -280,28 +252,29 @@ int main() {
                         300.0f, // Acceleration
                         "destructive_projectile", // Type
                         sf::Color::Red, // Color 
-                        windowSize // Window
+                        windowSize, // Window
+                        false
                     ));
 
                     spawnTimer_3 = 0;
                     spawnInterval_3 = getRandomFloat(3.0f, 8.0f);
                 }
 
+                // Update score
+                score = Projectile::returnScore(score);
+
                 // Update projectiles
                 for (const auto& projectile : Projectile::projectiles) {
                     projectile->update(deltaTime, totalElapsedTime);
-                    projectile->checkCollisionWithPlayer(*player);
+                    projectile->checkCollisionWithPlayer(*player, score);
 
                     // Check collision with other projectiles
                     for (const auto& other : Projectile::projectiles) {
                         if (projectile != other) {
-                            projectile->checkCollisionWithProjectile(*other);
+                            projectile->checkCollisionWithProjectile(*other, score);
                         }
                     }
                 }
-
-                // Update score
-                score = Projectile::returnScore();
 
                 // Remove projectiles that are off screen
                 Projectile::removeOutOfBounds();
@@ -312,7 +285,7 @@ int main() {
                 }
 
                 // Check for game over by timer
-                if (totalElapsedTime >= GAME_DURATION || Projectile::returnScore() < 0) {
+                if (totalElapsedTime >= GAME_DURATION || Projectile::returnScore(score) < 0) {
                     gameOver = true;
                 }
             }
