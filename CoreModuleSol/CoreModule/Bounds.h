@@ -7,7 +7,7 @@ struct Bounds {
     float right;
     float bottom;
 
-    bool collides(const Bounds& other) const {
+    bool intercepts(const Bounds& other) const {
         if (right < other.left || left > other.right || bottom < other.top || top > other.bottom) {
             return false;
         }

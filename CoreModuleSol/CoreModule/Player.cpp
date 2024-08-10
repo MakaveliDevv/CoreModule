@@ -116,14 +116,14 @@ float Player::normalizeDirection(float x) {
 void Player::shoot() const {
     sf::Vector2f projectilePosition = getPosition() + sf::Vector2f(customSize.x / 2.0f, 0.0f);
     Projectile::projectiles.emplace_back(std::make_unique<Projectile>(
-        projectilePosition,
-        sf::Vector2f(10.0f, 10.0f),
-        sf::Vector2f(0.0f, -1.0f),
-        sf::Vector2f(0.0f, 0.0f),
-        300.0f,
-        "shooting",
-        sf::Color::Blue,
-        windowSize
+        projectilePosition, // Start position
+        sf::Vector2f(10.0f, 10.0f), // Size
+        sf::Vector2f(0.0f, -1.0f), // Direction
+        sf::Vector2f(0.0f, 0.0f), // Velocity
+        300.0f, // Acceleration
+        "shooting_projectile", // Type
+        sf::Color::Blue, // Color
+        windowSize // Window
     ));
 }
 
@@ -140,7 +140,7 @@ bool Player::collision(const Projectile& projectile) const {
     Bounds playerBounds = calculateBounds();
     Bounds projectileBounds = projectile.calculateBounds();
 
-    return playerBounds.collides(projectileBounds);
+    return playerBounds.intercepts(projectileBounds);
 }
 
 void Player::draw(sf::RenderWindow& window) {
