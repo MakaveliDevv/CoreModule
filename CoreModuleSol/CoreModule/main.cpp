@@ -22,6 +22,7 @@ int score = 0;
 bool gameOver = false;
 bool gameWin = false;
 float totalElapsedTime = 0;
+float friction = 0;
 
 const float margin = 5.0f;
 sf::Vector2f w_Size = sf::Vector2f(1200, 1600);
@@ -194,8 +195,9 @@ int main() {
                         sf::Vector2f(x, 0), // Start position
                         sf::Vector2f(projectileSize), // Size
                         direction, // Direction
-                        sf::Vector2f(0.0f, getRandomFloat(50.0f, 150.0f)), // Velocity
+                        sf::Vector2f(0.0f, 0.0f), // Velocity
                         300.0f, // Acceleration
+                        friction, // Friction
                         "normal_projectile", // Type
                         sf::Color::White, // Color
                         windowSize, // Window
@@ -221,8 +223,9 @@ int main() {
                         sf::Vector2f(x, 0), // Start position
                         sf::Vector2f(projectileSize), // Size
                         direction, // Direction
-                        sf::Vector2f(0.0f, getRandomFloat(100.0f, 200.0f)), // Velocity
+                        sf::Vector2f(0.0f, 0.0f), // Velocity
                         300.0f, // Acceleration
+                        friction, // Friction
                         "special_projectile", // Type
                         sf::Color::Yellow, // Color 
                         windowSize, // Window
@@ -248,8 +251,9 @@ int main() {
                         sf::Vector2f(x, 0), // Start position
                         sf::Vector2f(projectileSize), // Size
                         direction, // Direction
-                        sf::Vector2f(0.0f, getRandomFloat(100.0f, 250.0f)), // Velocity
-                        300.0f, // Acceleration
+                        sf::Vector2f(0.0f, 0.0f), // Velocity
+                        getRandomFloat(200.0f, 400.0f), // Acceleration
+                        friction, // Friction
                         "destructive_projectile", // Type
                         sf::Color::Red, // Color 
                         windowSize, // Window
@@ -274,6 +278,11 @@ int main() {
                             projectile->checkCollisionWithProjectile(*other, score);
                         }
                     }
+                }
+
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::F)) {
+                    std::cout << "Friction applied" << std::endl;
+                    friction = .15f;
                 }
 
                 // Remove projectiles that are off screen

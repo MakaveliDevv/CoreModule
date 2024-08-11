@@ -53,6 +53,7 @@ private:
 
     float powerShotCooldown;
     float powerShotTimer;
+    float getRandomFloat(float min, float max);
 };
 
 #endif // PLAYER_H

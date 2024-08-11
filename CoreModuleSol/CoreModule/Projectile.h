@@ -17,6 +17,7 @@ public:
         const sf::Vector2f& direction,
         const sf::Vector2f& velocity,
         float acceleration,
+        float friction,
         const std::string& type,
         const sf::Color& color,
         const sf::Vector2u& playerWindowSize,
@@ -32,6 +33,7 @@ public:
     sf::Vector2f getSize();
     Bounds calculateBounds() const;
 
+    float normalizeDirection(float y);
     bool isOutOfBounds();
 
     static void removeOutOfBounds();
@@ -45,6 +47,7 @@ private:
     sf::Vector2f direction;
     sf::Color color;
     float acceleration;
+    float friction;
     bool outOfBounds;
     bool markedForRemoval;
 

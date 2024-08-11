@@ -9,6 +9,7 @@ Projectile::Projectile(
     const sf::Vector2f& direction,
     const sf::Vector2f& velocity,
     float acceleration,
+    float friction,
     const std::string& type,
     const sf::Color& color,
     const sf::Vector2u& playerWindowSize,
@@ -19,6 +20,7 @@ Projectile::Projectile(
     direction(direction),
     vel(velocity),
     acceleration(acceleration),
+    friction(friction),
     outOfBounds(false),
     type(type),
     color(color),
@@ -30,17 +32,46 @@ Projectile::Projectile(
     shape.setPosition(customPosition);
     shape.setFillColor(color);
     vel = direction * acceleration;
-    //std::cout << "Projectile created: " << type << std::endl;
+    std::cout << "Projectile created: " << type << std::endl;
 }
 
 
 void Projectile::update(float deltaTime, float elapsedTime) {
     
-    if (powerShot) {
+    // Normalize direction
+    if (direction.y != 0.0f) {
+        float yLength = normalizeDirection(direction.y * direction.y);
+        direction / yLength;
+    }
+
+    if(direction.x != 0.0f) {
+        float xLength = normalizeDirection(direction.x * direction.x);
+        direction / xLength;
+    }
+
+
+    if (powerShot || this->type == "destructive_projectile") {
+        // Travel with increased speed over time
         vel += direction * acceleration * deltaTime;
     }
+    else {
+        // Consistent speed over time
+        vel += direction * deltaTime;
+    }
+
+    // Apply friction
+    vel -= vel * friction * deltaTime;
+
+    // Apply the velocity to the custom position
     customPosition += vel * deltaTime;
+
     shape.setPosition(customPosition);
+
+    // Debug statements
+    //std::cout << "Custom Position: (" << customPosition.x << ", " << customPosition.y << ")" << std::endl;
+    //std::cout << "Velocity: (" << vel.x << ", " << vel.y << ")" << std::endl;
+    std::cout << "Acceleration: " << acceleration << std::endl;
+
     /*
     if(elapsedTime < 15.0f) {
     }
@@ -89,6 +120,21 @@ Bounds Projectile::calculateBounds() const {
     bounds.right = customPosition.x + customSize.x;
     bounds.bottom = customPosition.y + customSize.y;
     return bounds;
+}
+
+float Projectile::normalizeDirection(float x) {
+    if (x == 0.0f || x == 1.0f) {
+        return x;
+    }
+
+    float normalize = x / 2.0f;
+    float error = 0.000f;
+
+    while (std::abs(normalize * normalize - x) > error) {
+        normalize = (normalize + x / normalize) / 2.0f;
+    }
+
+    return normalize;
 }
 
 bool Projectile::isOutOfBounds() {

@@ -28,7 +28,6 @@ Player::Player(
     powerShotTimer(0.0f),
 
     windowSize(initialWindowSize)
-//    powerShot(false)
 {
 
     customPosition = position;
@@ -106,6 +105,11 @@ void Player::setWindowSize(const sf::Vector2u& size) {
     windowSize = size;
 }
 
+float Player::getRandomFloat(float min, float max)
+{
+    return 0.0f;
+}
+
 sf::Vector2f Player::getPosition() {
     return customPosition;
 }
@@ -137,10 +141,11 @@ void Player::shoot() {
         sf::Vector2f(0.0f, -1.0f), // Direction
         sf::Vector2f(0.0f, 0.0f), // Velocity
         500.0f, // Acceleration
+        0.0f, // Friction
         "shooting_projectile", // Type
         sf::Color::Blue, // Color
-        windowSize // Window
-        //powerShot
+        windowSize, // Window
+        false
     ));
 }
 
@@ -152,6 +157,7 @@ void Player::shootWithPower() {
         sf::Vector2f(0.0f, -1.0f), // Direction
         sf::Vector2f(0.0f, 0.0f), // Velocity
         750.0f, // Acceleration
+        0.0f, // Friction
         "shooting_projectile", // Type
         sf::Color::Cyan, // Color
         windowSize, // Window
@@ -174,15 +180,6 @@ bool Player::collision(const Projectile& projectile) {
 
     return playerBounds.intercepts(projectileBounds);
 }
-
-/*
-bool Player::isPowerShotActive() const {
-    return powerShot;
-}
-bool Player::returnPowerShot() {
-    return powerShot;
-}
-*/
 
 void Player::draw(sf::RenderWindow& window) {
     window.draw(shape);
