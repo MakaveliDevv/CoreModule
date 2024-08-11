@@ -15,8 +15,25 @@ enum class GameState {
     GameWin
 };
 
-const int MAX_SCORE = 200;
-const float GAME_DURATION = 120.0f;
+const int max_score = 100;
+const float game_duration = 120.0f;
+
+const int score_treshold_25 = max_score * 0.25f;
+const int score_treshold_50 = max_score * 0.5f;
+const int score_treshold_75 = max_score * 0.75f;
+
+float timeThreshold25 = 30.0f;
+float timeThreshold50 = 60.0f;
+float timeThreshold75 = 90.0f;
+
+bool is30ThresholdReached = false;
+bool is60ThresholdReached = false;
+bool is90ThresholdReached = false;
+
+
+bool is25ThresholdReached = false;
+bool is50ThresholdReached = false;
+bool is75ThresholdReached = false;
 
 int score = 0;
 bool gameOver = false;
@@ -25,7 +42,7 @@ float totalElapsedTime = 0;
 float friction = 0;
 
 const float margin = 5.0f;
-sf::Vector2f w_Size = sf::Vector2f(1200, 1600);
+sf::Vector2f w_Size = sf::Vector2f(800, 800);
 
 // Function to generate a random float between min and max
 float getRandomFloat(float min, float max) {
@@ -151,6 +168,10 @@ int main() {
                             gameWin = false;
                             totalElapsedTime = 0;
                             Projectile::projectiles.clear();
+
+                            is30ThresholdReached = false;
+                            is60ThresholdReached = false;
+                            is90ThresholdReached = false;
                         }
                         else if (selectedOption == 1) { // Rules
                             gameState = GameState::RulesScreen;
@@ -269,7 +290,7 @@ int main() {
 
                 // Update projectiles
                 for (const auto& projectile : Projectile::projectiles) {
-                    projectile->update(deltaTime, totalElapsedTime);
+                    projectile->update(deltaTime, totalElapsedTime, score);
                     projectile->checkCollisionWithPlayer(*player, score);
 
                     // Check collision with other projectiles
@@ -288,13 +309,46 @@ int main() {
                 // Remove projectiles that are off screen
                 Projectile::removeOutOfBounds();
 
+                if (score >= score_treshold_25 && !is25ThresholdReached) {
+                    is25ThresholdReached = true;
+                    Projectile::accelerationIncrementPercentage += 50.0f; 
+                    std::cout << "reached treshold" << std::endl;
+                }
+
+                if (score >= score_treshold_50 && !is50ThresholdReached) {
+                    is50ThresholdReached = true;
+                    Projectile::accelerationIncrementPercentage += 75.0f;
+                }
+
+                if (score >= score_treshold_75 && !is75ThresholdReached) {
+                    is75ThresholdReached = true;
+                    Projectile::accelerationIncrementPercentage += 75.0f;
+                }
+
+                // Increase spawn rate of destructive projectiles based on time thresholds
+                if (totalElapsedTime >= is30ThresholdReached) {
+                    is30ThresholdReached = true;
+                    Projectile::increaseDestructiveProjectileSpawnRate(50.0f);
+                    std::cout << "Increased destructive projectile spawn rate at 30 seconds" << std::endl;
+                }
+                if (totalElapsedTime >= is60ThresholdReached) {
+                    is60ThresholdReached = true;
+                    Projectile::increaseDestructiveProjectileSpawnRate(50.0f);
+                    std::cout << "Increased destructive projectile spawn rate at 60 seconds" << std::endl;
+                }
+                if (totalElapsedTime >= is90ThresholdReached) {
+                    is90ThresholdReached = true;
+                    Projectile::increaseDestructiveProjectileSpawnRate(75.0f);
+                    std::cout << "Increased destructive projectile spawn rate at 90 seconds" << std::endl;
+                }
+
                 // Check for game win
-                if (score >= MAX_SCORE) {
+                if (score >= max_score) {
                     gameWin = true;
                 }
 
                 // Check for game over by timer
-                if (totalElapsedTime >= GAME_DURATION || Projectile::returnScore(score) < 0) {
+                if (totalElapsedTime >= game_duration || Projectile::returnScore(score) < 0) {
                     gameOver = true;
                 }
             }
@@ -355,13 +409,13 @@ int main() {
             window.draw(scoreText);
 
             // Display the max score to gain
-            sf::Text maxScoretext("MaxScore: " + std::to_string(MAX_SCORE), font, 20);
+            sf::Text maxScoretext("MaxScore: " + std::to_string(max_score), font, 20);
             maxScoretext.setFillColor(sf::Color::Red);
             maxScoretext.setPosition(windowSize.x - 250, 10);
             window.draw(maxScoretext);
 
             // Display the timer
-            int timeLeft = static_cast<int>(GAME_DURATION - totalElapsedTime);
+            int timeLeft = static_cast<int>(game_duration - totalElapsedTime);
             sf::Text timerText("Time: " + std::to_string(timeLeft), font, 20);
             timerText.setFillColor(sf::Color::Cyan);
             timerText.setPosition(10, 40);

@@ -24,7 +24,7 @@ public:
         bool isPowerShot = false
     );
 
-    void update(float deltaTime, float elapsedTime);
+    void update(float deltaTime, float elapsedTime, int& score);
     void draw(sf::RenderWindow& window);
     void checkCollisionWithPlayer(Player& player, int& score);
     void checkCollisionWithProjectile(Projectile& other, int& score);
@@ -38,6 +38,12 @@ public:
 
     static void removeOutOfBounds();
     static int returnScore(int& score);
+    static float accelerationIncrementPercentage;
+
+    static float destructiveProjectileSpawnRate;
+    static void increaseDestructiveProjectileSpawnRate(float percentage);
+    static void returnType();
+
     static std::vector<std::unique_ptr<Projectile>> projectiles;
 
 private:
@@ -61,6 +67,8 @@ private:
     void markForRemoval();  
     bool isMarkedForRemoval(); 
     bool powerShot;
+    float dynamicAcceleration; 
+
 };
 
 #endif

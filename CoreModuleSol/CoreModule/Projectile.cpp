@@ -2,6 +2,8 @@
 #include "Player.h" 
 
 std::vector<std::unique_ptr<Projectile>> Projectile::projectiles;
+float Projectile::accelerationIncrementPercentage = 0.0f;
+float Projectile::destructiveProjectileSpawnRate = 1.0f;
 
 Projectile::Projectile(
     const sf::Vector2f& position,
@@ -26,18 +28,19 @@ Projectile::Projectile(
     color(color),
     windowSize(playerWindowSize),
     markedForRemoval(false),
-    powerShot(isPowerShot)
+    powerShot(isPowerShot),
+    dynamicAcceleration((type == "destructive_projectile" || type == "shooting_projectile") ? acceleration : acceleration * (1 + accelerationIncrementPercentage / 100.0f))
+    //dynamicAcceleration(acceleration* (1 + accelerationIncrementPercentage / 100.0f))
 {
     shape.setSize(customSize);
     shape.setPosition(customPosition);
     shape.setFillColor(color);
-    vel = direction * acceleration;
-    std::cout << "Projectile created: " << type << std::endl;
+    vel = direction * dynamicAcceleration;
+    //std::cout << "Projectile created: " << type << std::endl;
 }
 
 
-void Projectile::update(float deltaTime, float elapsedTime) {
-    
+void Projectile::update(float deltaTime, float elapsedTime, int& score) {
     // Normalize direction
     if (direction.y != 0.0f) {
         float yLength = normalizeDirection(direction.y * direction.y);
@@ -49,14 +52,9 @@ void Projectile::update(float deltaTime, float elapsedTime) {
         direction / xLength;
     }
 
-
     if (powerShot || this->type == "destructive_projectile") {
         // Travel with increased speed over time
         vel += direction * acceleration * deltaTime;
-    }
-    else {
-        // Consistent speed over time
-        vel += direction * deltaTime;
     }
 
     // Apply friction
@@ -67,32 +65,6 @@ void Projectile::update(float deltaTime, float elapsedTime) {
 
     shape.setPosition(customPosition);
 
-    // Debug statements
-    //std::cout << "Custom Position: (" << customPosition.x << ", " << customPosition.y << ")" << std::endl;
-    //std::cout << "Velocity: (" << vel.x << ", " << vel.y << ")" << std::endl;
-    std::cout << "Acceleration: " << acceleration << std::endl;
-
-    /*
-    if(elapsedTime < 15.0f) {
-    }
-    if (Player::returnPowerShot()) {
-        vel += direction * acceleration * deltaTime;
-        customPosition += vel * deltaTime;
-        shape.setPosition(customPosition);
-    }
-    else {
-        customPosition += vel * deltaTime;
-        shape.setPosition(customPosition);
-    }
-    /*
-    else if (elapsedTime > 15.0f) {
-        std::cout << "Timer reached the 15 seconds mark" << std::endl;
-        vel += direction * acceleration * deltaTime;
-        customPosition += vel * deltaTime;
-        shape.setPosition(customPosition);
-    }
-    */
-
     if (customPosition.y < 0 || customPosition.y + customSize.y > windowSize.y) {
         outOfBounds = true;
     }
@@ -100,6 +72,7 @@ void Projectile::update(float deltaTime, float elapsedTime) {
         vel.x = -vel.x;
     }
 }
+
 
 void Projectile::draw(sf::RenderWindow& window) {
     window.draw(shape);
@@ -197,6 +170,10 @@ void Projectile::checkCollisionWithProjectile(Projectile& other, int& score) {
 
 int Projectile::returnScore(int& score) {
     return score;
+}
+
+void Projectile::increaseDestructiveProjectileSpawnRate(float percentage) {
+    destructiveProjectileSpawnRate *= (1 + percentage / 100.0f);
 }
 
 void Projectile::removeOutOfBounds() {

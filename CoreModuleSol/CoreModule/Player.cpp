@@ -156,7 +156,7 @@ void Player::shootWithPower() {
         sf::Vector2f(20.0f, 20.0f), // Size
         sf::Vector2f(0.0f, -1.0f), // Direction
         sf::Vector2f(0.0f, 0.0f), // Velocity
-        750.0f, // Acceleration
+        500.0f, // Acceleration
         0.0f, // Friction
         "shooting_projectile", // Type
         sf::Color::Cyan, // Color
