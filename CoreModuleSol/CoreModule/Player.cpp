@@ -38,6 +38,13 @@ Player::Player(
     vel = direction * acceleration;
 }
 
+
+// Implement the setFriction method
+void Player::setFriction(float newFriction) {
+    friction = newFriction;
+}
+
+
 void Player::update(float deltaTime) {
     // Update shooting timer
     shootingTimer += deltaTime;
@@ -65,8 +72,7 @@ void Player::update(float deltaTime) {
 
     // Apply friction
     if (direction.x == 0.0f) {
-        float actualFriction = std::min(friction, 1.0f);
-        vel -= vel * actualFriction * deltaTime;
+        vel -= vel * friction * deltaTime;
     }
 
     // Apply stopping factor
@@ -161,10 +167,6 @@ void Player::shootWithPower() {
         windowSize, // Window
         true
     ));
-}
-
-void Player::setFriction(float newFriction) {
-    friction = newFriction;
 }
 
 Bounds Player::calculateBounds() {

@@ -28,9 +28,6 @@ public:
     void checkCollisionWithPlayer(Player& player, int& score);
     void checkCollisionWithProjectile(Projectile& other, int& score);
 
-    //static void setFriction(float newFriction);
-    //std::string getType() const;
-
     sf::Vector2f getPosition();
     sf::Vector2f getSize();
     Bounds calculateBounds() const;

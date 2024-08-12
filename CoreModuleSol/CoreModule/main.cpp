@@ -36,7 +36,7 @@ bool is75ThresholdReached = false;
 
 float totalElapsedTime = 0;
 
-float player_friction = .1f;
+float player_friction = 0.05f;
 
 int score = 0;
 bool gameOver = false;
@@ -81,7 +81,7 @@ int main() {
         sf::Vector2f(0.0f, 0.0f), // Initial direction
         500.0f, // Acceleration
         player_friction, // Friction
-        0.5f, // Stopping factor
+        1.0f, // Stopping factor
         0.5f, // Shooting cooldown
         1.0f, // Powershot cooldown
         windowSize // Initial window size passed to Player constructor
@@ -309,17 +309,20 @@ int main() {
 
                 if (score >= score_treshold_25 && !is25ThresholdReached) {
                     is25ThresholdReached = true;
+                    player->setFriction(2.0f);
                     Projectile::accelerationIncrementPercentage += 50.0f;
                     std::cout << "reached treshold" << std::endl;
                 }
 
                 if (score >= score_treshold_50 && !is50ThresholdReached) {
                     is50ThresholdReached = true;
+                    player->setFriction(4.0f);
                     Projectile::accelerationIncrementPercentage += 75.0f;
                 }
 
                 if (score >= score_treshold_75 && !is75ThresholdReached) {
                     is75ThresholdReached = true;
+                    player->setFriction(8.0f);
                     Projectile::accelerationIncrementPercentage += 75.0f;
                 }
 
@@ -338,27 +341,6 @@ int main() {
 
                 // Remove projectiles that are off screen
                 Projectile::removeOutOfBounds();
-
-                /*
-                // Ability    
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::F)) {
-                    if (!keyPressed) {
-                        
-                        Projectile::setFriction(2.5f);
-                        keyPressed = true;
-                    }
-                }
-
-                if (keyPressed) {
-                    frictionTimer -= deltaTime;
-
-                    if (frictionTimer <= 0) {
-                        Projectile::setFriction(0.05f);
-                        frictionTimer = 5.0f;
-                        keyPressed = false;
-                    }
-                }
-                */
 
                 // Check for game win
                 if (score >= max_score) {

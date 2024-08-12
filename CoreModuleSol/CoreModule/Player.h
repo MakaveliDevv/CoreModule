@@ -37,6 +37,8 @@ public:
     void setWindowSize(const sf::Vector2u& size);      
     void setFriction(float newFriction);
 
+    static float frictionIncrement;
+
 private:
     sf::RectangleShape shape;
     sf::Vector2f vel;
