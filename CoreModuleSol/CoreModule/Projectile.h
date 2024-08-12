@@ -17,7 +17,6 @@ public:
         const sf::Vector2f& direction,
         const sf::Vector2f& velocity,
         float acceleration,
-        float friction,
         const std::string& type,
         const sf::Color& color,
         const sf::Vector2u& playerWindowSize,
@@ -29,6 +28,9 @@ public:
     void checkCollisionWithPlayer(Player& player, int& score);
     void checkCollisionWithProjectile(Projectile& other, int& score);
 
+    //static void setFriction(float newFriction);
+    //std::string getType() const;
+
     sf::Vector2f getPosition();
     sf::Vector2f getSize();
     Bounds calculateBounds() const;
@@ -38,11 +40,9 @@ public:
 
     static void removeOutOfBounds();
     static int returnScore(int& score);
-    static float accelerationIncrementPercentage;
 
-    static float destructiveProjectileSpawnRate;
-    static void increaseDestructiveProjectileSpawnRate(float percentage);
-    static void returnType();
+    static float accelerationIncrementPercentage;
+    static float friction; 
 
     static std::vector<std::unique_ptr<Projectile>> projectiles;
 
@@ -53,7 +53,6 @@ private:
     sf::Vector2f direction;
     sf::Color color;
     float acceleration;
-    float friction;
     bool outOfBounds;
     bool markedForRemoval;
 
@@ -68,7 +67,6 @@ private:
     bool isMarkedForRemoval(); 
     bool powerShot;
     float dynamicAcceleration; 
-
 };
 
 #endif

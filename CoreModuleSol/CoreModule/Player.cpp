@@ -78,11 +78,11 @@ void Player::update(float deltaTime) {
     // Ensure player stays within window bounds
     if (customPosition.x < 0) {
         customPosition.x = 0;
-        vel.x = std::max(vel.x, 0.0f);
+        //vel.x = std::max(vel.x, 0.0f);
     }
     if (customPosition.x + customSize.x > windowSize.x) {
         customPosition.x = windowSize.x - customSize.x;
-        vel.x = std::min(vel.x, 0.0f);
+        //vel.x = std::min(vel.x, 0.0f);
     }
 
     shape.setPosition(customPosition);
@@ -141,7 +141,6 @@ void Player::shoot() {
         sf::Vector2f(0.0f, -1.0f), // Direction
         sf::Vector2f(0.0f, 0.0f), // Velocity
         500.0f, // Acceleration
-        0.0f, // Friction
         "shooting_projectile", // Type
         sf::Color::Blue, // Color
         windowSize, // Window
@@ -157,12 +156,15 @@ void Player::shootWithPower() {
         sf::Vector2f(0.0f, -1.0f), // Direction
         sf::Vector2f(0.0f, 0.0f), // Velocity
         500.0f, // Acceleration
-        0.0f, // Friction
         "shooting_projectile", // Type
         sf::Color::Cyan, // Color
         windowSize, // Window
         true
     ));
+}
+
+void Player::setFriction(float newFriction) {
+    friction = newFriction;
 }
 
 Bounds Player::calculateBounds() {

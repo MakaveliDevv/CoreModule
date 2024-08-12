@@ -18,9 +18,9 @@ enum class GameState {
 const int max_score = 100;
 const float game_duration = 120.0f;
 
-const int score_treshold_25 = max_score * 0.25f;
-const int score_treshold_50 = max_score * 0.5f;
-const int score_treshold_75 = max_score * 0.75f;
+const float score_treshold_25 = max_score * 0.25f;
+const float score_treshold_50 = max_score * 0.5f;
+const float score_treshold_75 = max_score * 0.75f;
 
 float timeThreshold25 = 30.0f;
 float timeThreshold50 = 60.0f;
@@ -30,19 +30,24 @@ bool is30ThresholdReached = false;
 bool is60ThresholdReached = false;
 bool is90ThresholdReached = false;
 
-
 bool is25ThresholdReached = false;
 bool is50ThresholdReached = false;
 bool is75ThresholdReached = false;
 
+float totalElapsedTime = 0;
+
+float player_friction = .1f;
+
 int score = 0;
 bool gameOver = false;
 bool gameWin = false;
-float totalElapsedTime = 0;
-float friction = 0;
+
+//float frictionTimer = 3.0f;
+//bool keyPressed = false;
+//float defaultFriction = .05f;
 
 const float margin = 5.0f;
-sf::Vector2f w_Size = sf::Vector2f(800, 800);
+sf::Vector2u w_Size = sf::Vector2u(800, 800);
 
 // Function to generate a random float between min and max
 float getRandomFloat(float min, float max) {
@@ -50,13 +55,13 @@ float getRandomFloat(float min, float max) {
 }
 
 int main() {
-    // Define initial window size
+    // Initial window size
     sf::Vector2u windowSize(w_Size.x, w_Size.y);
 
     // Window init
     sf::RenderWindow window(sf::VideoMode(windowSize.x, windowSize.y), "Makaveli");
 
-    // Initialize game state
+    // Game state
     GameState gameState = GameState::StartScreen;
 
     // Font init
@@ -70,12 +75,12 @@ int main() {
 
     // Player init
     std::unique_ptr<Player> player = std::make_unique<Player>(
-        sf::Vector2f(windowSize.x / 2, windowSize.y - playerSize.y), // Initial player position
+        sf::Vector2f(static_cast<float>(windowSize.x) / 2.0f, static_cast<float>(windowSize.y) - playerSize.y), // Initial player position
         sf::Vector2f(playerSize.x, playerSize.y), // Player size
         sf::Vector2f(0.0f, 0.0f), // Initial velocity
         sf::Vector2f(0.0f, 0.0f), // Initial direction
         500.0f, // Acceleration
-        0.25f, // Friction
+        player_friction, // Friction
         0.5f, // Stopping factor
         0.5f, // Shooting cooldown
         1.0f, // Powershot cooldown
@@ -88,11 +93,9 @@ int main() {
     float spawnTimer = 0;
     float spawnInterval = 1.0f;
     float spawnTimer_2 = 0;
-    float spawnInterval_2 = getRandomFloat(5.0f, 15.0f);
+    float spawnInterval_2 = getRandomFloat(5.0f, 10.0f);
     float spawnTimer_3 = 0;
-    float spawnInterval_3 = getRandomFloat(3.0f, 8.0f);
-
-    srand(static_cast<unsigned>(time(0)));
+    float spawnInterval_3 = getRandomFloat(3.0f, 6.0f);
 
     // Menu options
     std::vector<sf::Text> startScreenOptions;
@@ -109,8 +112,12 @@ int main() {
     startScreenOptions.push_back(quitOption);
 
     for (int i = 0; i < startScreenOptions.size(); ++i) {
-        startScreenOptions[i].setPosition(windowSize.x / 2 - startScreenOptions[i].getLocalBounds().width / 2, windowSize.y / 2 - (startScreenOptions.size() / 2 - i) * 40);
+        startScreenOptions[i].setPosition(
+            static_cast<float>(windowSize.x) / 2.0f - startScreenOptions[i].getLocalBounds().width / 2.0f,
+            static_cast<float>(windowSize.y) / 2.0f - (startScreenOptions.size() / 2.0f - i) * 40.0f
+        );
     }
+
 
     sf::Text rulesText;
     rulesText.setFont(font);
@@ -130,7 +137,7 @@ int main() {
         "\n"
         "6. You lose -5 points for every 'destructive' \n projectile you shoot down.\n"
         "\n"
-        "7. You lose -15 points for every 'destructive' \n projectile that hits you.\n"
+        "7. You lose -10 points for every 'destructive' \n projectile that hits you.\n"
         "\n"
         "8. The normal projectiles are white, \n the special ones are yellow \n and the destructive ones are red.\n"
         "\n"
@@ -154,14 +161,15 @@ int main() {
             if (event.type == sf::Event::KeyPressed) {
                 if (gameState == GameState::StartScreen) {
                     if (event.key.code == sf::Keyboard::Up) {
-                        selectedOption = (static_cast<unsigned long long>(selectedOption) - 1 + startScreenOptions.size()) % startScreenOptions.size();
+                        selectedOption = (selectedOption - 1 + static_cast<int>(startScreenOptions.size())) % static_cast<int>(startScreenOptions.size());
                     }
                     if (event.key.code == sf::Keyboard::Down) {
-                        selectedOption = (static_cast<unsigned long long>(selectedOption) + 1) % startScreenOptions.size();
+                        selectedOption = (selectedOption + 1) % static_cast<int>(startScreenOptions.size());
                     }
                     if (event.key.code == sf::Keyboard::Enter) {
                         if (selectedOption == 0) { // Play
                             gameState = GameState::Playing;
+
                             // Reset game state variables
                             score = 0;
                             gameOver = false;
@@ -172,6 +180,10 @@ int main() {
                             is30ThresholdReached = false;
                             is60ThresholdReached = false;
                             is90ThresholdReached = false;
+
+                            is25ThresholdReached = false;
+                            is50ThresholdReached = false;
+                            is75ThresholdReached = false;
                         }
                         else if (selectedOption == 1) { // Rules
                             gameState = GameState::RulesScreen;
@@ -201,6 +213,26 @@ int main() {
                 spawnTimer_2 += deltaTime;
                 spawnTimer_3 += deltaTime;
 
+
+                // Increase spawn rate of destructive projectiles based on time thresholds
+                if (totalElapsedTime >= timeThreshold25) {
+                    is30ThresholdReached = true;
+                    spawnInterval_3 = getRandomFloat(2.0f, 4.0f);
+                }
+
+                if (totalElapsedTime >= timeThreshold50) {
+                    is60ThresholdReached = true;
+                    spawnInterval_3 = getRandomFloat(1.5f, 3.5f);
+                }
+
+                if (totalElapsedTime >= timeThreshold75) {
+                    is90ThresholdReached = true;
+                    spawnInterval_3 = getRandomFloat(1.0f, 3.0f);
+                }
+
+                float randomDirection = static_cast<float>((std::rand() % 2 == 0 ? -1 : 1));
+                sf::Vector2f direction = sf::Vector2f(randomDirection, 1.0f);
+
                 if (spawnTimer >= spawnInterval) {
                     sf::Vector2f projectileSize = sf::Vector2f(30.0f, 30.0f);
                     float max_X = windowSize.x - projectileSize.x - margin;
@@ -208,8 +240,7 @@ int main() {
                     // Generate a random value on the x axis based on the window size
                     float x = margin + static_cast<float>(rand() % static_cast<int>(max_X - margin));
 
-                    int randomDirection = (std::rand() % 2 == 0 ? -1 : 1);
-                    sf::Vector2f direction = sf::Vector2f(randomDirection, 1);
+                   
 
                     // Spawn regular falling projectile
                     Projectile::projectiles.emplace_back(std::make_unique<Projectile>(
@@ -218,7 +249,6 @@ int main() {
                         direction, // Direction
                         sf::Vector2f(0.0f, 0.0f), // Velocity
                         300.0f, // Acceleration
-                        friction, // Friction
                         "normal_projectile", // Type
                         sf::Color::White, // Color
                         windowSize, // Window
@@ -226,7 +256,6 @@ int main() {
                     ));
 
                     spawnTimer = 0;
-                    spawnInterval = 1.0f;
                 }
 
                 if (spawnTimer_2 >= spawnInterval_2) {
@@ -236,9 +265,6 @@ int main() {
                     // Generate a random value on the x axis based on the window size
                     float x = margin + static_cast<float>(rand() % static_cast<int>(max_X - margin));
 
-                    int randomDirection = (std::rand() % 2 == 0 ? -1 : 1);
-                    sf::Vector2f direction = sf::Vector2f(randomDirection, 1);
-
                     // Spawn a special projectile
                     Projectile::projectiles.emplace_back(std::make_unique<Projectile>(
                         sf::Vector2f(x, 0), // Start position
@@ -246,7 +272,6 @@ int main() {
                         direction, // Direction
                         sf::Vector2f(0.0f, 0.0f), // Velocity
                         300.0f, // Acceleration
-                        friction, // Friction
                         "special_projectile", // Type
                         sf::Color::Yellow, // Color 
                         windowSize, // Window
@@ -254,7 +279,6 @@ int main() {
                     ));
 
                     spawnTimer_2 = 0;
-                    spawnInterval_2 = getRandomFloat(5.0f, 15.0f);
                 }
 
                 if (spawnTimer_3 >= spawnInterval_3) {
@@ -264,17 +288,13 @@ int main() {
                     // Generate a random value on the x axis based on the window size
                     float x = margin + static_cast<float>(rand() % static_cast<int>(max_X - margin));
 
-                    int randomDirection = (std::rand() % 2 == 0 ? -1 : 1);
-                    sf::Vector2f direction = sf::Vector2f(randomDirection, 1);
-
                     // Spawn a destructive projectile
                     Projectile::projectiles.emplace_back(std::make_unique<Projectile>(
                         sf::Vector2f(x, 0), // Start position
                         sf::Vector2f(projectileSize), // Size
                         direction, // Direction
                         sf::Vector2f(0.0f, 0.0f), // Velocity
-                        getRandomFloat(200.0f, 400.0f), // Acceleration
-                        friction, // Friction
+                        getRandomFloat(150.0f, 250.0f), // Acceleration
                         "destructive_projectile", // Type
                         sf::Color::Red, // Color 
                         windowSize, // Window
@@ -282,11 +302,26 @@ int main() {
                     ));
 
                     spawnTimer_3 = 0;
-                    spawnInterval_3 = getRandomFloat(3.0f, 8.0f);
                 }
 
                 // Update score
                 score = Projectile::returnScore(score);
+
+                if (score >= score_treshold_25 && !is25ThresholdReached) {
+                    is25ThresholdReached = true;
+                    Projectile::accelerationIncrementPercentage += 50.0f;
+                    std::cout << "reached treshold" << std::endl;
+                }
+
+                if (score >= score_treshold_50 && !is50ThresholdReached) {
+                    is50ThresholdReached = true;
+                    Projectile::accelerationIncrementPercentage += 75.0f;
+                }
+
+                if (score >= score_treshold_75 && !is75ThresholdReached) {
+                    is75ThresholdReached = true;
+                    Projectile::accelerationIncrementPercentage += 75.0f;
+                }
 
                 // Update projectiles
                 for (const auto& projectile : Projectile::projectiles) {
@@ -301,46 +336,29 @@ int main() {
                     }
                 }
 
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::F)) {
-                    std::cout << "Friction applied" << std::endl;
-                    friction = .15f;
-                }
-
                 // Remove projectiles that are off screen
                 Projectile::removeOutOfBounds();
 
-                if (score >= score_treshold_25 && !is25ThresholdReached) {
-                    is25ThresholdReached = true;
-                    Projectile::accelerationIncrementPercentage += 50.0f; 
-                    std::cout << "reached treshold" << std::endl;
+                /*
+                // Ability    
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::F)) {
+                    if (!keyPressed) {
+                        
+                        Projectile::setFriction(2.5f);
+                        keyPressed = true;
+                    }
                 }
 
-                if (score >= score_treshold_50 && !is50ThresholdReached) {
-                    is50ThresholdReached = true;
-                    Projectile::accelerationIncrementPercentage += 75.0f;
-                }
+                if (keyPressed) {
+                    frictionTimer -= deltaTime;
 
-                if (score >= score_treshold_75 && !is75ThresholdReached) {
-                    is75ThresholdReached = true;
-                    Projectile::accelerationIncrementPercentage += 75.0f;
+                    if (frictionTimer <= 0) {
+                        Projectile::setFriction(0.05f);
+                        frictionTimer = 5.0f;
+                        keyPressed = false;
+                    }
                 }
-
-                // Increase spawn rate of destructive projectiles based on time thresholds
-                if (totalElapsedTime >= is30ThresholdReached) {
-                    is30ThresholdReached = true;
-                    Projectile::increaseDestructiveProjectileSpawnRate(50.0f);
-                    std::cout << "Increased destructive projectile spawn rate at 30 seconds" << std::endl;
-                }
-                if (totalElapsedTime >= is60ThresholdReached) {
-                    is60ThresholdReached = true;
-                    Projectile::increaseDestructiveProjectileSpawnRate(50.0f);
-                    std::cout << "Increased destructive projectile spawn rate at 60 seconds" << std::endl;
-                }
-                if (totalElapsedTime >= is90ThresholdReached) {
-                    is90ThresholdReached = true;
-                    Projectile::increaseDestructiveProjectileSpawnRate(75.0f);
-                    std::cout << "Increased destructive projectile spawn rate at 90 seconds" << std::endl;
-                }
+                */
 
                 // Check for game win
                 if (score >= max_score) {
@@ -374,7 +392,10 @@ int main() {
             window.draw(rulesText);
             sf::Text backText("Press Escape to Return", font, 20);
             backText.setFillColor(sf::Color::White);
-            backText.setPosition(windowSize.x / 2 - backText.getLocalBounds().width / 2, windowSize.y - 50);
+
+            float centerX = static_cast<float>(windowSize.x) / 2.0f;
+            float centerY = static_cast<float>(windowSize.y) - 50.0f;
+            backText.setPosition(centerX - backText.getLocalBounds().width / 2.0f, centerY);
             window.draw(backText);
         }
         else if (gameState == GameState::Playing) {
@@ -411,7 +432,10 @@ int main() {
             // Display the max score to gain
             sf::Text maxScoretext("MaxScore: " + std::to_string(max_score), font, 20);
             maxScoretext.setFillColor(sf::Color::Red);
-            maxScoretext.setPosition(windowSize.x - 250, 10);
+            float centerX = static_cast<float>(windowSize.x) - 150.0f;
+            float centerY =  10.0f;
+
+            maxScoretext.setPosition(centerX - maxScoretext.getLocalBounds().width / 2.0f, centerY);
             window.draw(maxScoretext);
 
             // Display the timer

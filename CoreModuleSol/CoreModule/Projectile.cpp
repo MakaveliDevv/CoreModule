@@ -3,7 +3,7 @@
 
 std::vector<std::unique_ptr<Projectile>> Projectile::projectiles;
 float Projectile::accelerationIncrementPercentage = 0.0f;
-float Projectile::destructiveProjectileSpawnRate = 1.0f;
+float Projectile::friction = 0.05f;
 
 Projectile::Projectile(
     const sf::Vector2f& position,
@@ -11,7 +11,6 @@ Projectile::Projectile(
     const sf::Vector2f& direction,
     const sf::Vector2f& velocity,
     float acceleration,
-    float friction,
     const std::string& type,
     const sf::Color& color,
     const sf::Vector2u& playerWindowSize,
@@ -22,7 +21,6 @@ Projectile::Projectile(
     direction(direction),
     vel(velocity),
     acceleration(acceleration),
-    friction(friction),
     outOfBounds(false),
     type(type),
     color(color),
@@ -30,13 +28,11 @@ Projectile::Projectile(
     markedForRemoval(false),
     powerShot(isPowerShot),
     dynamicAcceleration((type == "destructive_projectile" || type == "shooting_projectile") ? acceleration : acceleration * (1 + accelerationIncrementPercentage / 100.0f))
-    //dynamicAcceleration(acceleration* (1 + accelerationIncrementPercentage / 100.0f))
 {
     shape.setSize(customSize);
     shape.setPosition(customPosition);
     shape.setFillColor(color);
     vel = direction * dynamicAcceleration;
-    //std::cout << "Projectile created: " << type << std::endl;
 }
 
 
@@ -168,12 +164,17 @@ void Projectile::checkCollisionWithProjectile(Projectile& other, int& score) {
     }
 }
 
+/*
+void Projectile::setFriction(float newFriction) {
+    friction = newFriction;
+}
+std::string Projectile::getType() const {
+    return type;
+}
+*/
+
 int Projectile::returnScore(int& score) {
     return score;
-}
-
-void Projectile::increaseDestructiveProjectileSpawnRate(float percentage) {
-    destructiveProjectileSpawnRate *= (1 + percentage / 100.0f);
 }
 
 void Projectile::removeOutOfBounds() {

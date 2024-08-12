@@ -34,7 +34,8 @@ public:
     Bounds calculateBounds();
 
     bool collision(const Projectile& projectile);
-    void setWindowSize(const sf::Vector2u& size);        
+    void setWindowSize(const sf::Vector2u& size);      
+    void setFriction(float newFriction);
 
 private:
     sf::RectangleShape shape;
